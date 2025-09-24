@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %}키 생성 - DES 놀이터{% endblock %}
+
+{% block content %}
+    <h1 class="mb-4">DES 키 생성</h1>
+    <p>64비트 키를 이진 문자열(0과 1로 이루어진 64자리)로 입력하여 16개의 라운드 키가 어떻게 생성되는지 확인하세요.</p>
+
+    <form method="POST" class="d-inline">
+        <input type="hidden" name="action" value="generate_all">
+        <div class="form-group">
+            <label for="key_input">64비트 키 (이진수)</label>
+            <input type="text" class="form-control" id="key_input" name="key" 
+                   pattern="[01]{64}" title="64비트 이진 문자열을 입력하세요." 
+                   value="{{ session.kg_key_str if session.kg_key_str else '0001001100110100010101110111100110011011101111001101111111110001' }}" 
+                   required>
+        </div>
+        <button type="submit" class="btn btn-primary">라운드 키 생성</button>
+    </form>
+    <form method="POST" class="d-inline">
+        <input type="hidden" name="action" value="clear_session">
+        <button type="submit" class="btn btn-info">계산기 초기화</button>
+    </form>
+
+    {% if session.kg_round_keys %}
+    <hr class="my-4">
+    <h2 class="mt-4">생성된 라운드 키</h2>
+    <p>입력한 키로부터 생성된 16개의 라운드 키(각 48비트)는 다음과 같습니다:</p>
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead class="thead-dark">
+                <tr>
+                    <th>라운드</th>
+                    <th>라운드 키 (이진수)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in range(16) %}
+                <tr>
+                    <td>{{ i + 1 }}</td>
+                    <td><code>{{ session.kg_round_keys[i] }}</code></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <hr class="my-5">
+
+    <h2 class="mb-4">키 생성 과정 계산기</h2>
+    <p>각 단계를 직접 계산해보세요.</p>
+
+    <!-- PC-1 Calculator -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h4 class="card-title">1. PC-1 (Permuted Choice 1)</h4>
+            <form method="POST">
+                <input type="hidden" name="action" value="calc_pc1">
+                <div class="form-group">
+                    <label for="pc1_input">64비트 키 (이진수)</label>
+                    <input type="text" class="form-control" id="pc1_input" name="pc1_key" pattern="[01]{64}" required value="{{ session.kg_pc1_key if session.kg_pc1_key }}">
+                </div>
+                <button type="submit" class="btn btn-secondary">PC-1 계산</button>
+                {% if session.kg_pc1_result %}
+                <div class="alert alert-info mt-3">
+                    <strong>결과 (56비트):</strong> <code>{{ session.kg_pc1_result }}</code>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <!-- Shift Calculator C -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h4 class="card-title">2a. Left Shift (C 블록)</h4>
+            <form method="POST">
+                <input type="hidden" name="action" value="calc_shift_c">
+                <div class="form-row">
+                    <div class="form-group col-md-8">
+                        <label for="shift_input_c">28비트 C 블록</label>
+                        <input type="text" class="form-control" id="shift_input_c" name="shift_block_c" pattern="[01]{28}" required value="{{ session.kg_shift_block_c if session.kg_shift_block_c }}">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="round_num_c">라운드 (1-16)</label>
+                        <input type="number" class="form-control" id="round_num_c" name="round_num_c" min="1" max="16" required value="{{ session.kg_round_num_c if session.kg_round_num_c else 1 }}">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-secondary">C블록 Shift 계산</button>
+                {% if session.kg_shift_result_c %}
+                <div class="alert alert-info mt-3">
+                    <strong>결과 ({{ session.kg_shift_amount_c }} 비트 이동):</strong> <code>{{ session.kg_shift_result_c }}</code>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <!-- Shift Calculator D -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h4 class="card-title">2b. Left Shift (D 블록)</h4>
+            <form method="POST">
+                <input type="hidden" name="action" value="calc_shift_d">
+                <div class="form-row">
+                    <div class="form-group col-md-8">
+                        <label for="shift_input_d">28비트 D 블록</label>
+                        <input type="text" class="form-control" id="shift_input_d" name="shift_block_d" pattern="[01]{28}" required value="{{ session.kg_shift_block_d if session.kg_shift_block_d }}">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="round_num_d">라운드 (1-16)</label>
+                        <input type="number" class="form-control" id="round_num_d" name="round_num_d" min="1" max="16" required value="{{ session.kg_round_num_d if session.kg_round_num_d else 1 }}">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-secondary">D블록 Shift 계산</button>
+                {% if session.kg_shift_result_d %}
+                <div class="alert alert-info mt-3">
+                    <strong>결과 ({{ session.kg_shift_amount_d }} 비트 이동):</strong> <code>{{ session.kg_shift_result_d }}</code>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <!-- PC-2 Calculator -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h4 class="card-title">3. PC-2 (Permuted Choice 2)</h4>
+            <form method="POST">
+                <input type="hidden" name="action" value="calc_pc2">
+                <div class="form-group">
+                    <label for="pc2_input">56비트 C+D 결합 블록</label>
+                    <input type="text" class="form-control" id="pc2_input" name="pc2_block" pattern="[01]{56}" required value="{{ session.kg_pc2_block if session.kg_pc2_block }}">
+                </div>
+                <button type="submit" class="btn btn-secondary">PC-2 계산</button>
+                {% if session.kg_pc2_result %}
+                <div class="alert alert-info mt-3">
+                    <strong>결과 (48비트 라운드 키):</strong> <code>{{ session.kg_pc2_result }}</code>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+{% endblock %}

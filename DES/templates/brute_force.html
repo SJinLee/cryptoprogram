@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}무차별 대입 공격 - DES 놀이터{% endblock %}
+
+{% block content %}
+    <h1 class="mb-4">무차별 대입 공격 시뮬레이션</h1>
+    <p>이 페이지는 무차별 대입 공격을 시뮬레이션합니다. 실제 DES 공격은 웹 데모용으로는 너무 느립니다. 작동 방식은 다음과 같습니다:</p>
+    <ol>
+        <li>평문과 "비밀" 키를 제공합니다.</li>
+        <li>애플리케이션은 사용자의 키로 평문을 암호화하여 목표 암호문을 생성합니다.</li>
+        <li>그런 다음 비밀 키를 임의의 위치에 포함하는 작은 검색 공간의 무작위 키를 생성합니다.</li>
+        <li>마지막으로, 이 키스페이스를 반복하면서 원본 평문을 생성하는 키를 찾을 때까지 각 키로 암호문을 복호화합니다.</li>
+    </ol>
+
+    <form method="POST">
+        <div class="form-group">
+            <label for="plaintext_input">64비트 평문 (이진수)</label>
+            <input type="text" class="form-control" id="plaintext_input" name="plaintext" 
+                   pattern="[01]{64}" title="64비트 이진 문자열을 입력하세요." 
+                   value="{{ plaintext_str if plaintext_str else '0000000100100011010001010110011110001001101010111100110111101111' }}" 
+                   required>
+        </div>
+        <div class="form-group">
+            <label for="key_input">64비트 "비밀" 키 (이진수)</label>
+            <input type="text" class="form-control" id="key_input" name="key" 
+                   pattern="[01]{64}" title="64비트 이진 문자열을 입력하세요." 
+                   value="{{ key_str if key_str else '0001001100110100010101110111100110011011101111001101111111110001' }}" 
+                   required>
+        </div>
+        <button type="submit" class="btn btn-danger">시뮬레이션 시작</button>
+    </form>
+
+    {% if results %}
+    <hr class="my-4">
+    <h2 class="mt-4">시뮬레이션 결과</h2>
+    <div class="card">
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item"><strong>목표 암호문:</strong> <code>{{ results.ciphertext }}</code></li>
+            <li class="list-group-item text-success"><strong>찾은 키:</strong> <code>{{ results.found_key }}</code></li>
+            <li class="list-group-item"><strong>시도한 키 개수:</strong> {{ results.attempts }}</li>
+            <li class="list-group-item"><strong>소요 시간:</strong> {{ results.time_taken | round(4) }} 초</li>
+        </ul>
+    </div>
+    {% endif %}
+
+{% endblock %}

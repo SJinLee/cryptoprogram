@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}암호화 - DES 놀이터{% endblock %}
+
+{% block content %}
+    <h1 class="mb-4">DES 암호화 과정</h1>
+    <p>64비트 평문과 64비트 키를 이진 문자열로 입력하여 결과 암호문과 단계별 처리 과정을 확인하세요.</p>
+
+    <form method="POST" class="d-inline">
+        <input type="hidden" name="action" value="encrypt_all">
+        <div class="form-group">
+            <label for="plaintext_input">64비트 평문 (이진수)</label>
+            <input type="text" class="form-control" id="plaintext_input" name="plaintext" 
+                   pattern="[01]{64}" title="64비트 이진 문자열을 입력하세요." 
+                   value="{{ session.enc_plaintext_str if session.enc_plaintext_str else '0000000100100011010001010110011110001001101010111100110111101111' }}" 
+                   required>
+        </div>
+        <div class="form-group">
+            <label for="key_input">64비트 키 (이진수)</label>
+            <input type="text" class="form-control" id="key_input" name="key" 
+                   pattern="[01]{64}" title="64비트 이진 문자열을 입력하세요." 
+                   value="{{ session.enc_key_str if session.enc_key_str else '0001001100110100010101110111100110011011101111001101111111110001' }}" 
+                   required>
+        </div>
+        <button type="submit" class="btn btn-primary">암호화</button>
+    </form>
+    <form method="POST" class="d-inline">
+        <input type="hidden" name="action" value="clear_session">
+        <button type="submit" class="btn btn-info">계산기 초기화</button>
+    </form>
+
+    {% if session.enc_ciphertext %}
+    <hr class="my-4">
+    <h2 class="mt-4">암호화 결과</h2>
+    <div class="alert alert-success">
+        <strong>암호문:</strong> <code>{{ session.enc_ciphertext }}</code>
+    </div>
+
+    <h3 class="mt-4">라운드별 상세 정보</h3>
+    <p>아래 표는 16개 각 라운드 이후의 왼쪽(L) 및 오른쪽(R) 블록 상태를 보여줍니다.</p>
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered table-sm">
+            <thead class="thead-dark">
+                <tr>
+                    <th>라운드</th>
+                    <th>왼쪽 블록 (L)</th>
+                    <th>오른쪽 블록 (R)</th>
+                    <th>라운드 키 (K)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for round_data in session.enc_round_logs %}
+                <tr>
+                    <td>{{ round_data.round }}</td>
+                    <td><code style="font-size: 0.8em; word-break: break-all;">{{ round_data.left }}</code></td>
+                    <td><code style="font-size: 0.8em; word-break: break-all;">{{ round_data.right }}</code></td>
+                    <td><code style="font-size: 0.8em; word-break: break-all;">{{ round_data.round_key }}</code></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <hr class="my-5">
+
+    <h2 class="mb-4">암호화 과정 계산기</h2>
+    <p>f-함수의 각 단계를 직접 계산해보세요.</p>
+
+    <!-- IP Calculator -->
+    <div class="card mb-4"><div class="card-body">
+        <h4 class="card-title">1. IP (초기 순열)</h4>
+        <form method="POST">
+            <input type="hidden" name="action" value="calc_ip">
+            <div class="form-group">
+                <label for="ip_input">64비트 평문</label>
+                <input type="text" class="form-control" id="ip_input" name="ip_block" pattern="[01]{64}" required value="{{ session.enc_ip_block if session.enc_ip_block }}">
+            </div>
+            <button type="submit" class="btn btn-secondary">IP 계산</button>
+            {% if session.enc_ip_result %}<div class="alert alert-info mt-3"><strong>결과:</strong> <code>{{ session.enc_ip_result }}</code></div>{% endif %}
+        </form>
+    </div></div>
+
+    <!-- E Calculator -->
+    <div class="card mb-4"><div class="card-body">
+        <h4 class="card-title">2. E (확장)</h4>
+        <form method="POST">
+            <input type="hidden" name="action" value="calc_e">
+            <div class="form-group">
+                <label for="e_input">32비트 R 블록</label>
+                <input type="text" class="form-control" id="e_input" name="e_block" pattern="[01]{32}" required value="{{ session.enc_e_block if session.enc_e_block }}">
+            </div>
+            <button type="submit" class="btn btn-secondary">E 계산</button>
+            {% if session.enc_e_result %}<div class="alert alert-info mt-3"><strong>결과 (48비트):</strong> <code>{{ session.enc_e_result }}</code></div>{% endif %}
+        </form>
+    </div></div>
+
+    <!-- E+K XOR Calculator -->
+    <div class="card mb-4"><div class="card-body">
+        <h4 class="card-title">3. 확장된 R 블록 ⊕ 라운드 키</h4>
+        <form method="POST">
+            <input type="hidden" name="action" value="calc_xor_key">
+            <div class="form-group">
+                <label for="exork_e_input">48비트 확장된 R 블록</label>
+                <input type="text" class="form-control" id="exork_e_input" name="exork_e_block" pattern="[01]{48}" required value="{{ session.enc_exork_e_block if session.enc_exork_e_block }}">
+            </div>
+            <div class="form-group">
+                <label for="exork_k_input">48비트 라운드 키</label>
+                <input type="text" class="form-control" id="exork_k_input" name="exork_k_block" pattern="[01]{48}" required value="{{ session.enc_exork_k_block if session.enc_exork_k_block }}">
+            </div>
+            <button type="submit" class="btn btn-secondary">XOR 계산</button>
+            {% if session.enc_exork_result %}<div class="alert alert-info mt-3"><strong>결과 (48비트):</strong> <code>{{ session.enc_exork_result }}</code></div>{% endif %}
+        </form>
+    </div></div>
+
+    <!-- S-Box Calculator -->
+    <div class="card mb-4"><div class="card-body">
+        <h4 class="card-title">4. S-Box 치환</h4>
+        <form method="POST">
+            <input type="hidden" name="action" value="calc_sbox">
+            <div class="form-group">
+                <label for="sbox_input">48비트 블록</label>
+                <input type="text" class="form-control" id="sbox_input" name="sbox_block" pattern="[01]{48}" required value="{{ session.enc_sbox_block if session.enc_sbox_block }}">
+            </div>
+            <button type="submit" class="btn btn-secondary">S-Box 계산</button>
+            {% if session.enc_sbox_result %}<div class="alert alert-info mt-3"><strong>결과 (32비트):</strong> <code>{{ session.enc_sbox_result }}</code></div>{% endif %}
+        </form>
+    </div></div>
+
+    <!-- P Calculator -->
+    <div class="card mb-4"><div class="card-body">
+        <h4 class="card-title">5. P (순열)</h4>
+        <form method="POST">
+            <input type="hidden" name="action" value="calc_p">
+            <div class="form-group">
+                <label for="p_input">32비트 S-Box 결과</label>
+                <input type="text" class="form-control" id="p_input" name="p_block" pattern="[01]{32}" required value="{{ session.enc_p_block if session.enc_p_block }}">
+            </div>
+            <button type="submit" class="btn btn-secondary">P 계산</button>
+            {% if session.enc_p_result %}<div class="alert alert-info mt-3"><strong>결과 (32비트):</strong> <code>{{ session.enc_p_result }}</code></div>{% endif %}
+        </form>
+    </div></div>
+
+{% endblock %}

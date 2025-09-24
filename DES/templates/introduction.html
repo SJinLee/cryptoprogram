@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}소개 - DES 놀이터{% endblock %}
+
+{% block content %}
+    <h1 class="mb-4">DES 소개</h1>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="card-title">개요</h2>
+            <p class="card-text">데이터 암호화 표준(DES)은 1970년대 초 IBM에서 개발한 대칭키 블록 암호입니다. 1977년 미국 정부의 공식 연방 정보 처리 표준(FIPS)으로 채택되었으며, 이후 디지털 데이터 암호화를 위한 세계적인 표준으로 빠르게 자리 잡았습니다.</p>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item"><b>대칭키:</b> 암호화와 복호화 모두에 동일한 키를 사용합니다.</li>
+                <li class="list-group-item"><b>블록 암호:</b> 고정된 크기(평문 및 암호문 64비트)의 데이터 블록 단위로 작동합니다.</li>
+                <li class="list-group-item"><b>키 길이:</b> 64비트 키를 사용하지만, 8비트는 패리티 검사용이므로 실제 키 길이는 56비트입니다.</li>
+                <li class="list-group-item"><b>구조:</b> 핵심 구조는 파이스텔 네트워크(Feistel network)이며, 16라운드의 치환 및 순열 연산을 데이터에 수행합니다.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="card-title">역사</h2>
+            <p class="card-text">DES의 이야기는 1972년, 현재의 NIST인 미국 국립표준국(NBS)이 정부 차원에서 미분류 민감 정보를 보호하기 위한 표준의 필요성을 인식하면서 시작되었습니다. 이에 부응하여 IBM은 호르스트 파이스텔이 설계한 이전 암호인 루시퍼(Lucifer)에 기반한 알고리즘을 개발했습니다.</p>
+            <p class="card-text">미국 국가안보국(NSA)과의 협의 후, IBM 알고리즘의 수정된 버전이 채택되어 1977년에 FIPS PUB 46으로 공표되었습니다. 이 채택은 군사 및 정보 기관 외부에서 암호학에 대한 학문적 관심이 확산되는 중대한 계기가 되었습니다.</p>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="card-title">쇠퇴와 유산</h2>
+            <p class="card-text">처음부터 DES는 상대적으로 짧은 56비트 키 길이와 NSA의 비밀스러운 설계 관여에 대한 비판에 직면했습니다. 컴퓨팅 성능이 발전함에 따라 56비트 키는 무차별 대입 공격에 점점 더 취약해졌습니다.</p>
+            <p class="card-text">1999년, DES 키가 단 22시간 15분 만에 공개적으로 해독된 것은 쇠퇴의 중요한 이정표가 되었습니다. 차분 및 선형 분석과 같은 공격에 대한 취약점은 이미 알려져 있었지만, 무차별 대입 공격의 실현 가능성이 결정타가 되었습니다.</p>
+            <p class="card-text">2002년, DES는 공식적으로 고급 암호화 표준(AES)으로 대체되었습니다. 그러나 그 유산은 계속되고 있습니다. DES에 대한 분석과 대중의 조사는 블록 암호와 그 설계에 대한 깊은 이해를 촉진했습니다. 알고리즘을 세 번 적용하는 변형인 Triple DES(3DES)는 단계적으로 폐지되고 있지만, 여전히 일부 특정 정부 용도로 승인되어 사용되고 있습니다.</p>
+        </div>
+    </div>
+
+{% endblock %}

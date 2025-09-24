@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}쇄도 효과 - DES 놀이터{% endblock %}
+
+{% block content %}
+    <h1 class="mb-4">쇄도 효과 시연</h1>
+    <p>쇄도 효과는 입력(평문 또는 키)의 작은 변화가 출력(암호문)에 크고 예측 불가능한 변화를 일으키는 것을 의미합니다. 여기서는 동일한 키로 1비트만 다른 두 평문을 암호화합니다.</p>
+
+    <form method="POST">
+        <div class="form-group">
+            <label for="key_input">64비트 키 (이진수)</label>
+            <input type="text" class="form-control" id="key_input" name="key" 
+                   pattern="[01]{64}" title="64비트 이진 문자열을 입력하세요." 
+                   value="{{ key_str if key_str else '0001001100110100010101110111100110011011101111001101111111110001' }}" 
+                   required>
+        </div>
+        <div class="form-group">
+            <label for="plaintext1_input">평문 1 (64비트 이진수)</label>
+            <input type="text" class="form-control" id="plaintext1_input" name="plaintext1" 
+                   pattern="[01]{64}" title="64비트 이진 문자열을 입력하세요." 
+                   value="{{ p1_str if p1_str else '0000000100100011010001010110011110001001101010111100110111101111' }}" 
+                   required>
+        </div>
+        <div class="form-group">
+            <label for="plaintext2_input">평문 2 (64비트 이진수 - 1비트 차이)</label>
+            <input type="text" class="form-control" id="plaintext2_input" name="plaintext2" 
+                   pattern="[01]{64}" title="64비트 이진 문자열을 입력하세요." 
+                   value="{{ p2_str if p2_str else '1000000100100011010001010110011110001001101010111100110111101111' }}" 
+                   required>
+        </div>
+        <button type="submit" class="btn btn-primary">시연 실행</button>
+    </form>
+
+    {% if results %}
+    <hr class="my-4">
+    <h2 class="mt-4">시연 결과</h2>
+    
+    <p>평문에서 단일 비트가 변경되었습니다(입력 참조). 그 결과 암호문에서 <strong>{{ results.bit_difference }} / 64 비트</strong>가 변경되어 강력한 쇄도 효과를 보여줍니다.</p>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-sm">
+            <tbody>
+                <tr>
+                    <th scope="row">암호문 1</th>
+                    <td><code>{{ results.c1 }}</code></td>
+                </tr>
+                <tr>
+                    <th scope="row">암호문 2</th>
+                    <td><code>{{ results.c2 }}</code></td>
+                </tr>
+                <tr>
+                    <th scope="row">차이점</th>
+                    <td>
+                        {% for bit1, bit2 in results.comparison %}
+                            {% if bit1 != bit2 %}
+                                <span class="badge badge-danger">&#9660;</span>
+                            {% else %}
+                                <span class="text-muted">&#9645;</span>
+                            {% endif %}
+                        {% endfor %}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <p><span class="badge badge-danger">&#9660;</span> = 비트가 다름. <span class="text-muted">&#9645;</span> = 비트가 같음.</p>
+    </div>
+    {% endif %}
+
+{% endblock %}

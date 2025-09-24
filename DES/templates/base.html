@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}DES 놀이터{% endblock %}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body { padding-top: 5rem; }
+        .navbar { background-color: #343a40 !important; }
+        .nav-link { color: #fff !important; }
+        .nav-link:hover { color: #ccc !important; }
+        .container {
+            max-width: 960px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top">
+        <a class="navbar-brand" href="/">DES 놀이터</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item"><a class="nav-link" href="/introduction">소개</a></li>
+                <li class="nav-item"><a class="nav-link" href="/key-generation">키 생성</a></li>
+                <li class="nav-item"><a class="nav-link" href="/encryption">암호화</a></li>
+                <li class="nav-item"><a class="nav-link" href="/avalanche">쇄도 효과</a></li>
+                <li class="nav-item"><a class="nav-link" href="/brute-force">무차별 대입 공격</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main role="main" class="container">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
