@@ -1,3 +1,3 @@
 # cryptoprogram
-
-[DES](DES.md)
+- [install](install.md)
+- [DES](DES.md)
