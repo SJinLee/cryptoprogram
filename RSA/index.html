@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>RSA Encryption Tool</title>
+  <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+
+  <div class="tab">
+    <button class="tablinks" onclick="openTab(event, 'RSA')" id="defaultOpen">RSA Encryption</button>
+    <button class="tablinks" onclick="openTab(event, 'Primes')">Prime Generator</button>
+  </div>
+
+  <!-- RSA Tab Content -->
+  <div id="RSA" class="tabcontent">
+    <h1>RSA Encryption</h1>
+    <div class="container">
+      <div class="keys">
+        <h2>Key Generation</h2>
+        <p>
+          <label for="p">Enter a prime number (p):</label>
+          <input type="number" id="p" name="p">
+        </p>
+        <p>
+          <label for="q">Enter another prime number (q):</label>
+          <input type="number" id="q" name="q">
+        </p>
+        <button id="generate">Generate Keys</button>
+        <p>
+          Public Key: <span id="public-key"></span>
+        </p>
+        <p>
+          Private Key: <span id="private-key"></span>
+        </p>
+      </div>
+      <div class="encryption">
+        <h2>Encryption</h2>
+        <p>
+          <label for="message">Enter a message to encrypt:</label>
+          <input type="text" id="message" name="message">
+        </p>
+        <button id="encrypt">Encrypt</button>
+        <p>
+          Encrypted Message: <span id="encrypted-message"></span>
+        </p>
+      </div>
+      <div class="decryption">
+        <h2>Decryption</h2>
+        <p>
+          <label for="encrypted">Enter a message to decrypt:</label>
+          <input type="text" id="encrypted" name="encrypted">
+        </p>
+        <button id="decrypt">Decrypt</button>
+        <p>
+          Decrypted Message: <span id="decrypted-message"></span>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prime Generator Tab Content -->
+  <div id="Primes" class="tabcontent">
+    <h1>Large Prime Number Generator</h1>
+    <div class="container">
+      <div class="generation">
+        <h2>Generate a Prime</h2>
+        <p>
+          <label for="bits">Enter number of bits (e.g., 16, 32, 64):</label>
+          <input type="number" id="bits" name="bits" value="128">
+        </p>
+        <button id="generate-prime">Generate Prime</button>
+        <p>This might take a moment for large numbers...</p>
+        <p>
+          Generated Prime: <textarea id="generated-prime" rows="4" cols="50" readonly></textarea>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://peterolson.github.io/BigInteger.js/BigInteger.min.js"></script>
+  <script src="script.js"></script>
+  <script src="primes.js"></script>
+  <script>
+    function openTab(evt, tabName) {
+      var i, tabcontent, tablinks;
+      tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+      }
+      tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+      document.getElementById(tabName).style.display = "block";
+      evt.currentTarget.className += " active";
+    }
+
+    // Get the element with id="defaultOpen" and click on it
+    document.getElementById("defaultOpen").click();
+  </script>
+
+</body>
+</html>
