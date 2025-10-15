@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+    <h2>관련 연구 및 특이사항</h2>
+    <p>이 페이지에서는 ElGamal 암호와 관련된 흥미로운 연구 결과나 특이사항들을 다룹니다.</p>
+    <ul>
+        <li><strong>동형암호(Homomorphic Encryption) 특성:</strong> ElGamal 암호는 곱셈에 대한 동형암호 특성을 가집니다. 즉, 두 암호문을 곱한 결과는 각 평문을 곱한 것과 같습니다. E(m1) * E(m2) = E(m1 * m2). 이 특성은 프라이버시를 보존하는 다양한 연산에 활용될 수 있습니다.</li>
+        <li><strong>무작위성(Randomization):</strong> 암호화 과정에서 매번 다른 난수 k를 사용하므로, 같은 평문을 여러 번 암호화해도 결과가 항상 다릅니다. 이는 공격자가 암호문만으로 평문을 유추하기 어렵게 만듭니다.</li>
+        <li><strong>메시지 확장:</strong> ElGamal 암호문은 평문보다 두 배 깁니다. (평문 M -> 암호문 (a, b))</li>
+    </ul>
+{% endblock %}

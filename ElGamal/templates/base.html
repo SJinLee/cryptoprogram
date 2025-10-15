@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>ElGamal 암호 시스템</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; display: flex; }
+        .sidebar {
+            width: 200px;
+            background-color: #f1f1f1;
+            height: 100vh;
+            padding: 20px;
+        }
+        .sidebar h1 { font-size: 1.5em; text-align: center; margin-bottom: 20px; }
+        .sidebar .nav a {
+            display: block;
+            color: black;
+            padding: 12px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+        .sidebar .nav a:hover { background-color: #ddd; }
+        .sidebar .nav a.active { background-color: #4CAF50; color: white; }
+        .content {
+            flex-grow: 1;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h1>ElGamal</h1>
+    <nav class="nav">
+        <a href="{{ url_for('index') }}" class="{% if request.endpoint == 'index' %}active{% endif %}">소개</a>
+        <a href="{{ url_for('system') }}" class="{% if request.endpoint == 'system' %}active{% endif %}">시스템 설명</a>
+        <a href="{{ url_for('keys') }}" class="{% if request.endpoint == 'keys' %}active{% endif %}">키 생성</a>
+        <a href="{{ url_for('experiment') }}" class="{% if request.endpoint == 'experiment' %}active{% endif %}">암/복호화 실험</a>
+        <a href="{{ url_for('calculator') }}" class="{% if request.endpoint == 'calculator' %}active{% endif %}">모듈러 계산</a>
+        <a href="{{ url_for('cryptanalysis') }}" class="{% if request.endpoint == 'cryptanalysis' %}active{% endif %}">암호 해독</a>
+        <a href="{{ url_for('special') }}" class="{% if request.endpoint == 'special' %}active{% endif %}">관련 연구</a>
+    </nav>
+</div>
+
+<div class="content">
+    {% block content %}{% endblock %}
+</div>
+
+</body>
+</html>

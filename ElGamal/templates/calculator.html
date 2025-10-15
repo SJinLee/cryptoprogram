@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+    <h2>모듈러 계산기</h2>
+    <p>ElGamal 암호에 필요한 모듈러 연산을 계산합니다.</p>
+
+    <form method="post">
+        <label for="num1">숫자 1:</label><br>
+        <input type="text" id="num1" name="num1" size="50" value="{{ form_input.num1 if form_input.num1 else '' }}"><br>
+        <label for="num2">숫자 2 (거듭제곱 또는 곱셈):</label><br>
+        <input type="text" id="num2" name="num2" size="50" value="{{ form_input.num2 if form_input.num2 else '' }}"><br>
+        <label for="mod_p">모듈러 (p):</label><br>
+        <input type="text" id="mod_p" name="mod_p" size="50" value="{{ form_input.mod_p if form_input.mod_p else '' }}"><br><br>
+
+        <input type="radio" id="power" name="operation" value="power" {% if form_input.operation == 'power' %}checked{% endif %}>
+        <label for="power">num1 ^ num2 mod p</label><br>
+        <input type="radio" id="inverse" name="operation" value="inverse" {% if form_input.operation == 'inverse' %}checked{% endif %}>
+        <label for="inverse">num1^(-1) mod p</label><br>
+        <input type="radio" id="multiply" name="operation" value="multiply" {% if form_input.operation == 'multiply' %}checked{% endif %}>
+        <label for="multiply">num1 * num2 mod p</label><br><br>
+
+        <button type="submit">계산</button>
+    </form>
+
+    {% if calc_result is not none %}
+    <hr>
+    <h3>계산 결과</h3>
+    <p>{{ calc_result }}</p>
+    {% endif %}
+{% endblock %}

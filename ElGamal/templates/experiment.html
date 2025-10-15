@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+    <h2>암호화 및 복호화 실험</h2>
+    <p>키를 사용하여 메시지를 암호화하고 복호화하는 것을 실험합니다. (키 생성 페이지에서 생성하면 값이 자동으로 채워집니다.)</p>
+
+    <hr>
+    <h3>암호화</h3>
+    <form method="post">
+        <label for="p">소수 (p):</label><br>
+        <input type="text" id="p" name="p" size="50" value="{{ form_input.p if form_input.p else keys.public_key.p if keys else '' }}"><br>
+        <label for="g">원시근 (g):</label><br>
+        <input type="text" id="g" name="g" size="50" value="{{ form_input.g if form_input.g else keys.public_key.g if keys else '' }}"><br>
+        <label for="y">공개키 (y):</label><br>
+        <input type="text" id="y" name="y" size="50" value="{{ form_input.y if form_input.y else keys.public_key.y if keys else '' }}"><br>
+        <label for="message">암호화할 메시지 (숫자):</label><br>
+        <input type="text" id="message" name="message" size="50" value="{{ form_input.message if form_input.message else '' }}"><br>
+        <label for="k">사용할 k (선택 사항):</label><br>
+        <input type="text" id="k" name="k" size="50" value="{{ form_input.k if form_input.k else '' }}"><br><br>
+        <button type="submit" name="encrypt">암호화</button>
+    </form>
+
+    <hr>
+    <h3>복호화</h3>
+    <form method="post">
+        {# The name attributes in this form will update the same form_input fields in the session #}
+        <label for="p_dec">소수 (p):</label><br>
+        <input type="text" id="p_dec" name="p" size="50" value="{{ form_input.p if form_input.p else keys.public_key.p if keys else '' }}"><br>
+        <label for="x">개인키 (x):</label><br>
+        <input type="text" id="x" name="x" size="50" value="{{ form_input.x if form_input.x else keys.private_key.x if keys else '' }}"><br>
+        <label for="c1">암호문 (c1):</label><br>
+        <input type="text" id="c1" name="c1" size="50" value="{{ form_input.c1 if form_input.c1 else '' }}"><br>
+        <label for="c2">암호문 (c2):</label><br>
+        <input type="text" id="c2" name="c2" size="50" value="{{ form_input.c2 if form_input.c2 else '' }}"><br><br>
+        <button type="submit" name="decrypt">복호화</button>
+    </form>
+
+    {% if result %}
+    <hr>
+    <h3>결과</h3>
+    <p>{{ result }}</p>
+    {% endif %}
+{% endblock %}
