@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h1>Merkle-Hellman Knapsack 암호 소개</h1>
+    <p>이 페이지는 Merkle-Hellman Knapsack 암호의 역사와 간략한 소개를 제공합니다.</p>
+    <p>Knapsack 암호는 공개키 암호 시스템의 초기 예시 중 하나로, "배낭 문제"라는 NP-완전 문제에 기반합니다. 이 아이디어는 1978년 Ralph Merkle과 Martin Hellman에 의해 발표되었습니다.</p>
+    <p>기본 아이디어는 "쉬운" 배낭 문제를 변형하여 "어려운" 배낭 문제처럼 보이게 만드는 것입니다. 쉬운 배낭 문제는 초증가 수열(superincreasing sequence)로 구성되어 간단히 해결할 수 있으며, 이것이 개인키(private key)가 됩니다. 이 개인키를 특별한 연산을 통해 변환하여 공개키(public key)를 만듭니다. 공개키는 일반적인 배낭 문제처럼 보여 해결하기 어렵습니다.</p>
+{% endblock %}

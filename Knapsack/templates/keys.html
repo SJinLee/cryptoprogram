@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h1>공개키와 개인키 생성</h1>
+    <p>버튼을 눌러 암호화에 사용할 개인키와 공개키를 무작위로 생성합니다.</p>
+    
+    <form method="post">
+        <button type="submit">랜덤 키 생성</button>
+    </form>
+    
+    <hr>
+    
+    <h2>생성된 키 정보</h2>
+    <p><strong>생성된 w:</strong> {{ session.get('generated_w', '아직 생성되지 않았습니다.') }}</p>
+    <p><strong>생성된 p:</strong> {{ session.get('generated_p', '아직 생성되지 않았습니다.') }}</p>
+    <p><strong>생성된 y:</strong> {{ session.get('generated_y', '아직 생성되지 않았습니다.') }}</p>
+    
+    <hr>
+
+    <h2>생성된 키</h2>
+    <p><strong>개인키 (w, p, y):</strong> {{ session.get('private_key', '아직 생성되지 않았습니다.') }}</p>
+    <p><strong>공개키 (β):</strong> {{ session.get('public_key', '아직 생성되지 않았습니다.') }}</p>
+
+{% endblock %}

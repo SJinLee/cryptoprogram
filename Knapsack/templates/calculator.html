@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h1>모듈러 연산기</h1>
+    <p>모듈러 덧셈, 곱셈, 거듭제곱, 역원 계산을 수행합니다.</p>
+
+    <form method="post">
+        <h2>x + y mod p</h2>
+        <input type="text" name="add_x" placeholder="x" value="{{ session.get('add_x', '') }}"> +
+        <input type="text" name="add_y" placeholder="y" value="{{ session.get('add_y', '') }}"> mod
+        <input type="text" name="add_p" placeholder="p" value="{{ session.get('add_p', '') }}">
+        <button type="submit" name="action" value="add">=</button>
+        <strong>결과:</strong> {{ session.get('add_result', '') }}
+        <br><br>
+
+        <h2>x * y mod p</h2>
+        <input type="text" name="mul_x" placeholder="x" value="{{ session.get('mul_x', '') }}"> *
+        <input type="text" name="mul_y" placeholder="y" value="{{ session.get('mul_y', '') }}"> mod
+        <input type="text" name="mul_p" placeholder="p" value="{{ session.get('mul_p', '') }}">
+        <button type="submit" name="action" value="multiply">=</button>
+        <strong>결과:</strong> {{ session.get('mul_result', '') }}
+        <br><br>
+
+        <h2>y^k mod p</h2>
+        <input type="text" name="pow_y" placeholder="y" value="{{ session.get('pow_y', '') }}">^
+        <input type="text" name="pow_k" placeholder="k" value="{{ session.get('pow_k', '') }}"> mod
+        <input type="text" name="pow_p" placeholder="p" value="{{ session.get('pow_p', '') }}">
+        <button type="submit" name="action" value="power">=</button>
+        <strong>결과:</strong> {{ session.get('pow_result', '') }}
+        <br><br>
+
+        <h2>x^(-1) mod p</h2>
+        <input type="text" name="inv_x" placeholder="x" value="{{ session.get('inv_x', '') }}">^(-1) mod
+        <input type="text" name="inv_p" placeholder="p" value="{{ session.get('inv_p', '') }}">
+        <button type="submit" name="action" value="inverse">=</button>
+        <strong>결과:</strong> {{ session.get('inv_result', '') }}
+    </form>
+
+{% endblock %}

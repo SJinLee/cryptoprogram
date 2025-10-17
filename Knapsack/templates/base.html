@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Knapsack 암호 실험</title>
+    <style>
+        body { display: flex; font-family: sans-serif; }
+        .sidebar {
+            width: 250px;
+            background: #f8f9fa;
+            padding: 20px;
+            height: 100vh;
+            position: fixed;
+        }
+        .sidebar h2 { text-align: center; }
+        .sidebar ul { list-style-type: none; padding: 0; }
+        .sidebar ul li a { display: block; padding: 10px; text-decoration: none; color: #333; }
+        .sidebar ul li a:hover, .sidebar ul li a.active { background: #e9ecef; }
+        .content { margin-left: 270px; padding: 20px; width: 100%; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2>메뉴</h2>
+    <ul>
+        <li><a href="/" class="{% if request.path == '/' %}active{% endif %}">소개</a></li>
+        <li><a href="/explain" class="{% if request.path == '/explain' %}active{% endif %}">암호화/복호화 방법</a></li>
+        <li><a href="/keys" class="{% if request.path == '/keys' %}active{% endif %}">키 생성</a></li>
+        <li><a href="/crypto" class="{% if request.path == '/crypto' %}active{% endif %}">암호화/복호화 실험</a></li>
+        <li><a href="/calculator" class="{% if request.path == '/calculator' %}active{% endif %}">모듈러 연산기</a></li>
+        <li><a href="/cryptanalysis" class="{% if request.path == '/cryptanalysis' %}active{% endif %}">알려진 암호 해독 방법</a></li>
+        <li><a href="/misc" class="{% if request.path == '/misc' %}active{% endif %}">기타</a></li>
+    </ul>
+</div>
+
+<div class="content">
+    {% block content %}{% endblock %}
+</div>
+
+</body>
+</html>
