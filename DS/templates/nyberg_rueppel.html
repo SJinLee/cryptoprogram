@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Nyberg-Rueppel 전자서명{% endblock %}
+
+{% block content %}
+    <h1>Nyberg-Rueppel 전자서명 방식</h1>
+    <p>Nyberg-Rueppel (NR) 전자서명 방식은 이산 로그 문제의 어려움에 기반한 또 다른 디지털 서명 알고리즘입니다.</p>
+
+    <h2>주요 특징:</h2>
+    <ul>
+        <li><strong>이산 로그 문제 기반:</strong> ElGamal, DSA와 유사하게 유한체에서의 이산 로그 문제의 계산적 어려움에 보안을 의존합니다.</li>
+        <li><strong>효율성:</strong> 특정 구현 환경, 특히 스마트 카드나 자원 제한적인 환경에서 효율적인 서명 및 검증 연산을 제공할 수 있도록 설계될 수 있습니다.</li>
+        <li><strong>서명 구성:</strong> 일반적으로 두 개의 구성 요소 (r, s)로 이루어진 서명을 생성합니다.</li>
+    </ul>
+
+    <h2>Nyberg-Rueppel 서명 과정 (자세한 설명):</h2>
+
+    <h3>1. 키 생성</h3>
+    <ol>
+        <li>큰 소수 p를 선택합니다.</li>
+        <li>p의 원시근(primitive root) g를 선택합니다.</li>
+        <li>개인키 x를 1 < x < p-1 범위에서 무작위로 선택합니다.</li>
+        <li>공개키 y = g^x mod p를 계산합니다.</li>
+    </ol>
+    <p>공개키는 (p, g, y)이고, 개인키는 (x)입니다.</p>
+
+    <h3>2. 서명 (Signing)</h3>
+    <ol>
+        <li>서명할 메시지 M을 해시 함수 H를 사용하여 해시 값 h = H(M)을 계산합니다.</li>
+        <li>1 < k < p-1 이고 gcd(k, p-1) = 1인 무작위 정수 k를 선택합니다.</li>
+        <li>r = g^k mod p를 계산합니다.</li>
+        <li>s = (x * r + k * h) mod (p-1)을 계산합니다.</li>
+    </ol>
+    <p>메시지 M과 서명 (r, s)를 수신자에게 전송합니다.</p>
+
+    <h3>3. 검증 (Verification)</h3>
+    <ol>
+        <li>수신자는 서명자로부터 받은 메시지 M을 해시 함수 H를 사용하여 해시 값 h' = H(M)을 계산합니다.</li>
+        <li>수신자는 다음 두 값을 계산합니다:</li>
+            <ul>
+                <li>좌변: g^s mod p</li>
+                <li>우변: (y^r * r^h') mod p</li>
+            </ul>
+        <li>좌변과 우변을 비교합니다. 두 값이 일치하면 서명이 유효한 것으로 간주됩니다.</li>
+    </ol>
+
+    <h2>Nyberg-Rueppel 전자서명 실험</h2>
+
+    <h3>키 생성</h3>
+    <form method="POST" action="{{ url_for('nyberg_rueppel') }}">
+        <label for="nr_p">소수 p:</label>
+        <input type="number" id="nr_p" name="p" value="{{ nr_p if nr_p is not none else '' }}" required>
+        <label for="nr_g">원시근 g:</label>
+        <input type="number" id="nr_g" name="g" value="{{ nr_g if nr_g is not none else '' }}" required>
+        <label for="nr_x">개인키 x:</label>
+        <input type="number" id="nr_x" name="x" value="{{ nr_x if nr_x is not none else '' }}" required>
+        <button type="submit" name="nr_operation" value="generate_keys">키 생성</button>
+        {% if nr_y is not none %}
+            <p>공개키 y: {{ nr_y }}</p>
+        {% endif %}
+        {% if nr_key_error is not none %}
+            <p style="color: red;">오류: {{ nr_key_error }}</p>
+        {% endif %}
+    </form>
+
+    <h3>서명</h3>
+    <form method="POST" action="{{ url_for('nyberg_rueppel') }}">
+        <label for="nr_message_sign">메시지:</label>
+        <input type="text" id="nr_message_sign" name="message" value="{{ nr_message_sign if nr_message_sign is not none else '' }}" required>
+        <label for="nr_p_sign">소수 p:</label>
+        <input type="number" id="nr_p_sign" name="p" value="{{ session_nr_p if session_nr_p is not none else (nr_p_sign if nr_p_sign is not none else '') }}" required>
+        <label for="nr_g_sign">원시근 g:</label>
+        <input type="number" id="nr_g_sign" name="g" value="{{ session_nr_g if session_nr_g is not none else (nr_g_sign if nr_g_sign is not none else '') }}" required>
+        <label for="nr_x_sign">개인키 x:</label>
+        <input type="number" id="nr_x_sign" name="x" value="{{ session_nr_x if session_nr_x is not none else (nr_x_sign if nr_x_sign is not none else '') }}" required>
+        <label for="nr_k_sign">무작위 정수 k:</label>
+        <input type="number" id="nr_k_sign" name="k" value="{{ nr_k_sign if nr_k_sign is not none else '' }}" required>
+        <button type="submit" name="nr_operation" value="sign">서명</button>
+        {% if nr_r_result is not none %}
+            <p>서명 (r): {{ nr_r_result }}</p>
+            <p>서명 (s): {{ nr_s_result }}</p>
+        {% endif %}
+        {% if nr_sign_error is not none %}
+            <p style="color: red;">오류: {{ nr_sign_error }}</p>
+        {% endif %}
+    </form>
+
+    <h3>검증</h3>
+    <form method="POST" action="{{ url_for('nyberg_rueppel') }}">
+        <label for="nr_message_verify">메시지:</label>
+        <input type="text" id="nr_message_verify" name="message" value="{{ nr_message_verify if nr_message_verify is not none else '' }}" required>
+        <label for="nr_r_verify">서명 r:</label>
+        <input type="number" id="nr_r_verify" name="r" value="{{ nr_r_verify if nr_r_verify is not none else '' }}" required>
+        <label for="nr_s_verify">서명 s:</label>
+        <input type="number" id="nr_s_verify" name="s" value="{{ nr_s_verify if nr_s_verify is not none else '' }}" required>
+        <label for="nr_p_verify">소수 p:</label>
+        <input type="number" id="nr_p_verify" name="p" value="{{ session_nr_p if session_nr_p is not none else (nr_p_verify if nr_p_verify is not none else '') }}" required>
+        <label for="nr_g_verify">원시근 g:</label>
+        <input type="number" id="nr_g_verify" name="g" value="{{ session_nr_g if session_nr_g is not none else (nr_g_verify if nr_g_verify is not none else '') }}" required>
+        <label for="nr_y_verify">공개키 y:</label>
+        <input type="number" id="nr_y_verify" name="y" value="{{ session_nr_y if session_nr_y is not none else (nr_y_verify if nr_y_verify is not none else '') }}" required>
+        <button type="submit" name="nr_operation" value="verify">검증</button>
+        {% if nr_verification_result is not none %}
+            <p>검증 결과: {{ nr_verification_result }}</p>
+        {% endif %}
+        {% if nr_verify_error is not none %}
+            <p style="color: red;">오류: {{ nr_verify_error }}</p>
+        {% endif %}
+    </form>
+{% endblock %}

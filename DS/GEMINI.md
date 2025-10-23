@@ -6,9 +6,13 @@ This project aims to develop a web application for experimenting with digital si
 *   An overview of digital signatures.
 *   Detailed explanations and interactive experimentation screens for RSA digital signatures.
 *   Detailed explanations and interactive experimentation screens for ElGamal digital signatures.
+*   A screen to explain and experiment with DSS.
+*   A screen to explain and experiment with Nyberg-Rueppel digital signature scheme, including detailed explanations of signing and verification methods.
+*   A screen to explain and experiment with KCDSA standard, including detailed explanations of signing and verification methods.
 *   A screen to calculate addition, multiplication, exponentiation, and inverse with modulo.
 *   A screen to randomly generate a prime number and a primitive root.
 *   Information regarding digital signature standards.
+*   A screen to compare signing and verification of ElGamal, DSS, Nyberg-Rueppel, KCDSA.
 *   Additional content related to digital signatures.
 
 The user interface will include a left-side menu for easy navigation between different pages.
