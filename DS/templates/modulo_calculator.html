@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}모듈로 계산기{% endblock %}
+
+{% block content %}
+    <h1>모듈로 계산기</h1>
+    <p>모듈로 연산은 정수를 나눈 후 나머지를 계산하는 연산입니다. 암호학에서 매우 중요한 역할을 합니다.</p>
+
+    <h2>모듈로 연산 종류:</h2>
+    <ul>
+        <li><strong>덧셈 (Addition):</strong> (a + b) mod n</li>
+        <li><strong>곱셈 (Multiplication):</strong> (a * b) mod n</li>
+        <li><strong>지수 (Exponentiation):</strong> a^b mod n</li>
+        <li><strong>역원 (Inverse):</strong> a * x ≡ 1 (mod n)을 만족하는 x (단, gcd(a, n) = 1일 때만 존재)</li>
+    </ul>
+
+    <h2>모듈로 계산 실험</h2>
+
+    <h3>모듈로 덧셈</h3>
+    <form method="POST" action="{{ url_for('modulo_calculator') }}">
+        <label for="add_a">a:</label>
+        <input type="number" id="add_a" name="a" value="{{ add_a if add_a is not none else '' }}" required>
+        <label for="add_b">b:</label>
+        <input type="number" id="add_b" name="b" value="{{ add_b if add_b is not none else '' }}" required>
+        <label for="add_n">n (모듈로):</label>
+        <input type="number" id="add_n" name="n" value="{{ add_n if add_n is not none else '' }}" required>
+        <button type="submit" name="operation" value="add">계산</button>
+        {% if add_result is not none %}
+            <p>결과: {{ add_result }}</p>
+        {% endif %}
+    </form>
+
+    <h3>모듈로 곱셈</h3>
+    <form method="POST" action="{{ url_for('modulo_calculator') }}">
+        <label for="mul_a">a:</label>
+        <input type="number" id="mul_a" name="a" value="{{ mul_a if mul_a is not none else '' }}" required>
+        <label for="mul_b">b:</label>
+        <input type="number" id="mul_b" name="b" value="{{ mul_b if mul_b is not none else '' }}" required>
+        <label for="mul_n">n (모듈로):</label>
+        <input type="number" id="mul_n" name="n" value="{{ mul_n if mul_n is not none else '' }}" required>
+        <button type="submit" name="operation" value="multiply">계산</button>
+        {% if mul_result is not none %}
+            <p>결과: {{ mul_result }}</p>
+        {% endif %}
+    </form>
+
+    <h3>모듈로 지수</h3>
+    <form method="POST" action="{{ url_for('modulo_calculator') }}">
+        <label for="exp_base">밑 (base):</label>
+        <input type="number" id="exp_base" name="base" value="{{ exp_base if exp_base is not none else '' }}" required>
+        <label for="exp_exponent">지수 (exponent):</label>
+        <input type="number" id="exp_exponent" name="exponent" value="{{ exp_exponent if exp_exponent is not none else '' }}" required>
+        <label for="exp_n">n (모듈로):</label>
+        <input type="number" id="exp_n" name="n" value="{{ exp_n if exp_n is not none else '' }}" required>
+        <button type="submit" name="operation" value="exponentiate">계산</button>
+        {% if exp_result is not none %}
+            <p>결과: {{ exp_result }}</p>
+        {% endif %}
+    </form>
+
+    <h3>모듈로 역원</h3>
+    <form method="POST" action="{{ url_for('modulo_calculator') }}">
+        <label for="inv_a">a:</label>
+        <input type="number" id="inv_a" name="a" value="{{ inv_a if inv_a is not none else '' }}" required>
+        <label for="inv_n">n (모듈로):</label>
+        <input type="number" id="inv_n" name="n" value="{{ inv_n if inv_n is not none else '' }}" required>
+        <button type="submit" name="operation" value="inverse">계산</button>
+        {% if inv_result is not none %}
+            <p>결과: {{ inv_result }}</p>
+        {% endif %}
+        {% if inv_error is not none %}
+            <p style="color: red;">오류: {{ inv_error }}</p>
+        {% endif %}
+    </form>
+{% endblock %}

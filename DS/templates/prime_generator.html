@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}소수 및 원시근 생성기{% endblock %}
+
+{% block content %}
+    <h1>소수 및 원시근 생성기</h1>
+    <p>지정된 범위 내에서 무작위 소수와 해당 소수의 원시근을 생성합니다.</p>
+
+    <form method="POST" action="{{ url_for('prime_generator') }}">
+        <label for="min_val">최소값:</label>
+        <input type="number" id="min_val" name="min_val" value="{{ request.form.min_val if request.form.min_val is not none else 100 }}" required>
+        <label for="max_val">최대값:</label>
+        <input type="number" id="max_val" name="max_val" value="{{ request.form.max_val if request.form.max_val is not none else 1000 }}" required>
+        <button type="submit">생성</button>
+    </form>
+
+    {% if generated_prime is not none %}
+        <h2>생성 결과:</h2>
+        <p>생성된 소수 (p): <strong>{{ generated_prime }}</strong></p>
+        {% if generated_primitive_root is not none %}
+            <p>원시근 (g): <strong>{{ generated_primitive_root }}</strong></p>
+        {% else %}
+            <p style="color: orange;">원시근을 찾을 수 없습니다. (소수가 너무 크거나 계산이 복잡할 수 있습니다.)</p>
+        {% endif %}
+    {% endif %}
+
+    {% if prime_generator_error is not none %}
+        <p style="color: red;">오류: {{ prime_generator_error }}</p>
+    {% endif %}
+{% endblock %}

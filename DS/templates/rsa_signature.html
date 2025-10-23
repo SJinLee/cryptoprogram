@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}RSA 전자서명{% endblock %}
+
+{% block content %}
+    <h1>RSA 전자서명</h1>
+    <p>RSA(Rivest-Shamir-Adleman)는 공개키 암호화 방식 중 하나로, 전자서명에도 널리 사용됩니다. RSA 전자서명은 큰 소수의 곱을 이용한 수학적 난해성에 기반합니다.</p>
+
+    <h2>RSA 전자서명 과정:</h2>
+
+    <h3>1. 키 생성</h3>
+    <ol>
+        <li>두 개의 큰 소수 p와 q를 선택합니다.</li>
+        <li>n = p * q를 계산합니다. (공개키와 개인키의 모듈러스)</li>
+        <li>φ(n) = (p-1)(q-1)을 계산합니다. (오일러 피 함수)</li>
+        <li>1 < e < φ(n) 이고 gcd(e, φ(n)) = 1인 정수 e를 선택합니다. (공개 지수)</li>
+        <li>d * e ≡ 1 (mod φ(n))을 만족하는 d를 계산합니다. (개인 지수)</li>
+    </ol>
+    <p>공개키는 (e, n)이고, 개인키는 (d, n)입니다.</p>
+
+    <h3>2. 서명 (Signing)</h3>
+    <ol>
+        <li>서명할 메시지 M을 해시 함수 H를 사용하여 해시 값 h = H(M)을 계산합니다.</li>
+        <li>서명자는 자신의 개인키 (d, n)를 사용하여 서명 S = h^d mod n을 계산합니다.</li>
+    </ol>
+    <p>메시지 M과 서명 S를 수신자에게 전송합니다.</p>
+
+    <h3>3. 검증 (Verification)</h3>
+    <ol>
+        <li>수신자는 서명자로부터 받은 메시지 M을 해시 함수 H를 사용하여 해시 값 h' = H(M)을 계산합니다.</li>
+        <li>수신자는 서명자로부터 받은 서명 S와 서명자의 공개키 (e, n)를 사용하여 복호화된 해시 값 h_prime = S^e mod n을 계산합니다.</li>
+        <li>h'와 h_prime을 비교합니다. 두 값이 일치하면 서명이 유효한 것으로 간주됩니다.</li>
+    </ol>
+
+    <h2>RSA 전자서명 실험</h2>
+
+    <h3>키 생성</h3>
+    <form method="POST" action="{{ url_for('rsa_signature') }}">
+        <label for="rsa_p">소수 p:</label>
+        <input type="number" id="rsa_p" name="p" value="{{ rsa_p if rsa_p is not none else '' }}" required>
+        <label for="rsa_q">소수 q:</label>
+        <input type="number" id="rsa_q" name="q" value="{{ rsa_q if rsa_q is not none else '' }}" required>
+        <button type="submit" name="rsa_operation" value="generate_keys">키 생성</button>
+        {% if rsa_n is not none %}
+            <p>n: {{ rsa_n }}</p>
+            <p>e (공개 지수): {{ rsa_e }}</p>
+            <p>d (개인 지수): {{ rsa_d }}</p>
+        {% endif %}
+        {% if rsa_key_error is not none %}
+            <p style="color: red;">오류: {{ rsa_key_error }}</p>
+        {% endif %}
+    </form>
+
+    <h3>서명</h3>
+    <form method="POST" action="{{ url_for('rsa_signature') }}">
+        <label for="rsa_message_sign">메시지:</label>
+        <input type="text" id="rsa_message_sign" name="message" value="{{ rsa_message_sign if rsa_message_sign is not none else '' }}" required>
+        <label for="rsa_d_sign">개인 지수 d:</label>
+        <input type="number" id="rsa_d_sign" name="d" value="{{ session_rsa_d if session_rsa_d is not none else (rsa_d_sign if rsa_d_sign is not none else '') }}" required>
+        <label for="rsa_n_sign">모듈로 n:</label>
+        <input type="number" id="rsa_n_sign" name="n" value="{{ session_rsa_n if session_rsa_n is not none else (rsa_n_sign if rsa_n_sign is not none else '') }}" required>
+        <button type="submit" name="rsa_operation" value="sign">서명</button>
+        {% if rsa_signature_result is not none %}
+            <p>서명: {{ rsa_signature_result }}</p>
+        {% endif %}
+        {% if rsa_sign_error is not none %}
+            <p style="color: red;">오류: {{ rsa_sign_error }}</p>
+        {% endif %}
+    </form>
+
+    <h3>검증</h3>
+    <form method="POST" action="{{ url_for('rsa_signature') }}">
+        <label for="rsa_message_verify">메시지:</label>
+        <input type="text" id="rsa_message_verify" name="message" value="{{ rsa_message_verify if rsa_message_verify is not none else '' }}" required>
+        <label for="rsa_signature_verify">서명:</label>
+        <input type="number" id="rsa_signature_verify" name="signature" value="{{ rsa_signature_verify if rsa_signature_verify is not none else '' }}" required>
+        <label for="rsa_e_verify">공개 지수 e:</label>
+        <input type="number" id="rsa_e_verify" name="e" value="{{ session_rsa_e if session_rsa_e is not none else (rsa_e_verify if rsa_e_verify is not none else '') }}" required>
+        <label for="rsa_n_verify">모듈로 n:</label>
+        <input type="number" id="rsa_n_verify" name="n" value="{{ session_rsa_n if session_rsa_n is not none else (rsa_n_verify if rsa_n_verify is not none else '') }}" required>
+        <button type="submit" name="rsa_operation" value="verify">검증</button>
+        {% if rsa_verification_result is not none %}
+            <p>검증 결과: {{ rsa_verification_result }}</p>
+        {% endif %}
+        {% if rsa_verify_error is not none %}
+            <p style="color: red;">오류: {{ rsa_verify_error }}</p>
+        {% endif %}
+    </form>
+{% endblock %}
