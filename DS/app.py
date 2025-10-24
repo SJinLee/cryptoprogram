@@ -86,17 +86,17 @@ def generate_dsa_params(L, N):
 
     # Find a prime p of L bits such that q divides p-1
     while True:
-        k = random.randint(2**(L-N-1), 2**(L-N) - 1)
-        p = k * q + 1
+        k_val = random.randint(2**(L-N-1), 2**(L-N) - 1)
+        p = k_val * q + 1
         if is_prime(p):
             break
     
     # Find a generator g
-    h = random.randint(2, p - 2)
-    g = pow(h, (p - 1) // q, p)
+    h_val = random.randint(2, p - 2)
+    g = pow(h_val, (p - 1) // q, p)
     while g == 1:
-        h = random.randint(2, p - 2)
-        g = pow(h, (p - 1) // q, p)
+        h_val = random.randint(2, p - 2)
+        g = pow(h_val, (p - 1) // q, p)
 
     return p, q, g
 
@@ -544,14 +544,22 @@ def kcdsa():
                 else:
                     # Generate private key x (0 < x < q)
                     kcdsa_x = random.randint(1, kcdsa_q - 1)
-                    # Calculate public key y (y = g^x mod p)
-                    kcdsa_y = pow(kcdsa_g, kcdsa_x, kcdsa_p)
+                    # Ensure x has a modular inverse modulo q
+                    while mod_inverse(kcdsa_x, kcdsa_q) is None:
+                        kcdsa_x = random.randint(1, kcdsa_q - 1)
 
-                    session['kcdsa_p'] = kcdsa_p
-                    session['kcdsa_q'] = kcdsa_q
-                    session['kcdsa_g'] = kcdsa_g
-                    session['kcdsa_x'] = kcdsa_x
-                    session['kcdsa_y'] = kcdsa_y
+                    # Calculate public key y (y = g^(x^-1) mod p)
+                    x_inv_mod_q = mod_inverse(kcdsa_x, kcdsa_q)
+                    if x_inv_mod_q is None:
+                        kcdsa_key_error = "개인키 x의 모듈러 역원을 찾을 수 없습니다."
+                    else:
+                        kcdsa_y = pow(kcdsa_g, x_inv_mod_q, kcdsa_p)
+
+                        session['kcdsa_p'] = kcdsa_p
+                        session['kcdsa_q'] = kcdsa_q
+                        session['kcdsa_g'] = kcdsa_g
+                        session['kcdsa_x'] = kcdsa_x
+                        session['kcdsa_y'] = kcdsa_y
 
             except ValueError:
                 kcdsa_key_error = "유효한 숫자를 입력해주세요."
@@ -565,30 +573,32 @@ def kcdsa():
                 kcdsa_x_sign = int(request.form.get('x'))
                 kcdsa_k_sign = int(request.form.get('k'))
 
-                if not (0 < kcdsa_k_sign < kcdsa_q_sign) or gcd(kcdsa_k_sign, kcdsa_q_sign) != 1:
-                    kcdsa_sign_error = "k는 0 < k < q 이고 gcd(k, q) = 1을 만족하는 무작위 정수여야 합니다."
+                if not (0 < kcdsa_k_sign < kcdsa_q_sign):
+                    kcdsa_sign_error = "k는 0 < k < q를 만족하는 무작위 정수여야 합니다."
                 else:
-                    # KCDSA uses a specific hash function (e.g., HAS-160). For demonstration, we use SHA-256.
-                    h = int(hashlib.sha256(kcdsa_message_sign.encode()).hexdigest(), 16)
-                    e = h % kcdsa_q # Hash value modulo q
-                    if e == 0: e = 1 # KCDSA specific: if e is 0, set to 1
+                    # KCDSA signing steps based on user's provided description
+                    w = pow(kcdsa_g_sign, kcdsa_k_sign, kcdsa_p_sign)
+                    r_hash = hashlib.sha256(str(w).encode()).hexdigest() # Hash of w
+                    r = int(r_hash, 16) % kcdsa_q # r = H(w) mod q
 
-                    # KCDSA specific signing steps (simplified for demonstration)
-                    # This is a simplified adaptation of DSA-like signing for KCDSA concept.
-                    r = pow(kcdsa_g_sign, kcdsa_k_sign, kcdsa_p_sign) % kcdsa_q
-                    if r == 0:
-                        kcdsa_sign_error = "r이 0이 되어 서명에 실패했습니다. 다른 k 값을 시도해보세요."
+                    # l is the hash function block size in bits. For SHA-256, it's 512 bits.
+                    l_bits = 512
+                    z = kcdsa_y % (2**l_bits)
+
+                    message_hash = hashlib.sha256((str(z) + kcdsa_message_sign).encode()).hexdigest() # H(z||M)
+                    h = int(message_hash, 16) % kcdsa_q # h = H(z||M) mod q
+
+                    e = (r ^ h) % kcdsa_q # e = (r xor h) mod q
+
+                    # s = x (k - e) mod q
+                    s = (kcdsa_x_sign * (kcdsa_k_sign - e)) % kcdsa_q
+                    if s < 0: s += kcdsa_q # Ensure s is positive
+
+                    if r == 0 or s == 0:
+                        kcdsa_sign_error = "r 또는 s가 0이 되어 서명에 실패했습니다. 다른 k 값을 시도해보세요."
                     else:
-                        k_inv = mod_inverse(kcdsa_k_sign, kcdsa_q_sign)
-                        if k_inv is None:
-                            kcdsa_sign_error = "k의 모듈러 역원을 찾을 수 없습니다."
-                        else:
-                            s = (k_inv * (e + kcdsa_x_sign * r)) % kcdsa_q
-                            if s == 0:
-                                kcdsa_sign_error = "s가 0이 되어 서명에 실패했습니다. 다른 k 값을 시도해보세요."
-                            else:
-                                kcdsa_r_result = r
-                                kcdsa_s_result = s
+                        kcdsa_r_result = r
+                        kcdsa_s_result = s
 
             except ValueError:
                 kcdsa_sign_error = "유효한 숫자를 입력해주세요."
@@ -606,22 +616,25 @@ def kcdsa():
                 if not (0 < kcdsa_r_verify < kcdsa_q_verify) or not (0 < kcdsa_s_verify < kcdsa_q_verify):
                     kcdsa_verify_error = "서명 (r, s) 값이 유효하지 않습니다. (0 < r, s < q)"
                 else:
-                    h_prime = int(hashlib.sha256(kcdsa_message_verify.encode()).hexdigest(), 16)
-                    e_prime = h_prime % kcdsa_q # Hash value modulo q
-                    if e_prime == 0: e_prime = 1 # KCDSA specific: if e_prime is 0, set to 1
+                    # l is the hash function block size in bits. For SHA-256, it's 512 bits.
+                    l_bits = 512
+                    z_prime = kcdsa_y_verify % (2**l_bits)
 
-                    w = mod_inverse(kcdsa_s_verify, kcdsa_q_verify)
-                    if w is None:
-                        kcdsa_verify_error = "s의 모듈러 역원을 찾을 수 없습니다."
+                    message_hash_prime = hashlib.sha256((str(z_prime) + kcdsa_message_verify).encode()).hexdigest()
+                    h_prime = int(message_hash_prime, 16) % kcdsa_q
+
+                    e_prime = (kcdsa_r_verify ^ h_prime) % kcdsa_q
+
+                    # v = (g^e' * y^s) mod p
+                    v = (pow(kcdsa_g_verify, e_prime, kcdsa_p_verify) * pow(kcdsa_y_verify, kcdsa_s_verify, kcdsa_p_verify)) % kcdsa_p_verify
+                    
+                    r_prime_hash = hashlib.sha256(str(v).encode()).hexdigest()
+                    r_prime = int(r_prime_hash, 16) % kcdsa_q
+
+                    if r_prime == kcdsa_r_verify:
+                        kcdsa_verification_result = "서명 유효함"
                     else:
-                        u1 = (e_prime * w) % kcdsa_q_verify
-                        u2 = (kcdsa_r_verify * w) % kcdsa_q_verify
-                        v = (pow(kcdsa_g_verify, u1, kcdsa_p_verify) * pow(kcdsa_y_verify, u2, kcdsa_p_verify)) % kcdsa_p_verify % kcdsa_q_verify
-
-                        if v == kcdsa_r_verify:
-                            kcdsa_verification_result = "서명 유효함"
-                        else:
-                            kcdsa_verification_result = "서명 유효하지 않음"
+                        kcdsa_verification_result = "서명 유효하지 않음"
 
             except ValueError:
                 kcdsa_verify_error = "유효한 숫자를 입력해주세요."

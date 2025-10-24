@@ -56,14 +56,131 @@
         </tbody>
     </table>
 
-    <h2>서명 및 검증 과정 비교 (개념적)</h2>
-    <p>각 알고리즘의 서명 및 검증 과정은 수학적 세부 사항에서 차이가 있지만, 기본적으로 메시지 해시, 개인키를 이용한 서명 생성, 공개키를 이용한 서명 검증이라는 큰 틀은 공유합니다.</p>
-    <ul>
-        <li><strong>ElGamal:</strong> 서명 (r, s)는 g^k mod p, (h - x*r) * k^(-1) mod (p-1) 등으로 계산되며, 검증은 g^h' == y^r * r^s mod p를 확인합니다.</li>
-        <li><strong>DSS (DSA):</strong> 서명 (r, s)는 (g^k mod p) mod q, (k^(-1) * (h + x*r)) mod q 등으로 계산되며, 검증은 v == r을 확인합니다.</li>
-        <li><strong>Nyberg-Rueppel:</strong> 서명 (r, s)는 g^k mod p, (x*r + k*h) mod (p-1) 등으로 계산되며, 검증은 g^s == y^r * r^h' mod p를 확인합니다.</li>
-        <li><strong>KCDSA:</strong> DSA와 유사한 구조를 가지며, 서명 (r, s)는 (g^k mod p) mod q, (k^(-1) * (e + x*r)) mod q 등으로 계산됩니다. 검증은 v == r을 확인하며, 해시 값 e가 0일 경우 1로 설정하는 등의 KCDSA 고유의 규칙이 있습니다.</li>
-    </ul>
+    <h2>키 생성, 서명, 검증 계산 과정 비교</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>과정</th>
+                <th>ElGamal</th>
+                <th>DSS (DSA)</th>
+                <th>Nyberg-Rueppel</th>
+                <th>KCDSA</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>키 생성</strong></td>
+                <td>
+                    <ul>
+                        <li>p (소수), g (원시근) 선택</li>
+                        <li>x (개인키) 선택 (1 < x < p-1)</li>
+                        <li>y = g^x mod p (공개키)</li>
+                    </ul>
+                </td>
+                <td>
+                    <ul>
+                        <li>p (큰 소수), q (p-1의 소수 인수) 생성</li>
+                        <li>g (생성자) 생성 (g = h^((p-1)/q) mod p)</li>
+                        <li>x (개인키) 선택 (0 < x < q)</li>
+                        <li>y = g^x mod p (공개키)</li>
+                    </ul>
+                </td>
+                <td>
+                    <ul>
+                        <li>p (소수), g (원시근) 선택</li>
+                        <li>x (개인키) 선택 (1 < x < p-1)</li>
+                        <li>y = g^x mod p (공개키)</li>
+                    </ul>
+                </td>
+                <td>
+                    <ul>
+                        <li>p (큰 소수), q (p-1의 소수 인수) 생성</li>
+                        <li>g (생성자) 생성 (g = h^((p-1)/q) mod p)</li>
+                        <li>x (개인키) 선택 (0 < x < q)</li>
+                        <li>x^(-1) mod q 계산</li>
+                        <li>y = g^(x^(-1)) mod p (공개키)</li>
+                    </ul>
+                </td>
+            </tr>
+            <tr>
+                <td><strong>서명 (Signing)</strong></td>
+                <td>
+                    <ul>
+                        <li>h = H(M) mod p</li>
+                        <li>k 선택 (1 < k < p-1, gcd(k, p-1)=1)</li>
+                        <li>r = g^k mod p</li>
+                        <li>s = (h - x*r) * k^(-1) mod (p-1)</li>
+                    </ul>
+                </td>
+                <td>
+                    <ul>
+                        <li>h = H(M) mod q</li>
+                        <li>k 선택 (0 < k < q, gcd(k, q)=1)</li>
+                        <li>r = (g^k mod p) mod q</li>
+                        <li>s = (k^(-1) * (h + x*r)) mod q</li>
+                    </ul>
+                </td>
+                <td>
+                    <ul>
+                        <li>h = H(M) mod p</li>
+                        <li>k 선택 (1 < k < p-1, gcd(k, p-1)=1)</li>
+                        <li>r = g^k mod p</li>
+                        <li>s = (x * r + k * h) mod (p-1)</li>
+                    </ul>
+                </td>
+                <td>
+                    <ul>
+                        <li>k 선택 (0 < k < q)</li>
+                        <li>w = g^k mod p</li>
+                        <li>r = H(w) mod q</li>
+                        <li>z = y mod 2^l</li>
+                        <li>h = H(z||M) mod q</li>
+                        <li>e = (r xor h) mod q</li>
+                        <li>s = x (k - e) mod q</li>
+                    </ul>
+                </td>
+            </tr>
+            <tr>
+                <td><strong>검증 (Verification)</strong></td>
+                <td>
+                    <ul>
+                        <li>h' = H(M) mod p</li>
+                        <li>v1 = (y^r * r^s) mod p</li>
+                        <li>v2 = g^h' mod p</li>
+                        <li>v1 == v2 확인</li>
+                    </ul>
+                </td>
+                <td>
+                    <ul>
+                        <li>h' = H(M) mod q</li>
+                        <li>w = s^(-1) mod q</li>
+                        <li>u1 = (h' * w) mod q</li>
+                        <li>u2 = (r * w) mod q</li>
+                        <li>v = ((g^u1 * y^u2) mod p) mod q</li>
+                        <li>v == r 확인</li>
+                    </ul>
+                </td>
+                <td>
+                    <ul>
+                        <li>h' = H(M) mod p</li>
+                        <li>좌변 = g^s mod p</li>
+                        <li>우변 = (y^r * r^h') mod p</li>
+                        <li>좌변 == 우변 확인</li>
+                    </ul>
+                </td>
+                <td>
+                    <ul>
+                        <li>z = y mod 2^l</li>
+                        <li>h' = H(z||M) mod q</li>
+                        <li>e' = (r xor h') mod q</li>
+                        <li>v = (g^e' * y^s) mod p</li>
+                        <li>r' = H(v) mod q</li>
+                        <li>r' == r 확인</li>
+                    </ul>
+                </td>
+            </tr>
+        </tbody>
+    </table>
 
     <p>각 방식의 상세한 구현 및 실험은 해당 페이지에서 확인하실 수 있습니다.</p>
 {% endblock %}
