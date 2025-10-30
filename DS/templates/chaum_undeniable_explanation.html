@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block title %}Chaum 부인방지 서명 설명{% endblock %}
+
+{% block content %}
+<h1>Chaum의 부인방지 서명 (Undeniable Signature) 설명</h1>
+<div class="text-content">
+    <p>
+        데이비드 차움(David Chaum)이 제안한 디지털 서명 방식으로, 서명자의 능동적인 참여가 있어야만 서명을 검증할 수 있는 것이 특징입니다. 이를 통해 서명자는 자신의 서명이 언제, 누구에 의해 검증되는지 완벽하게 통제할 수 있어 프라이버시 보호에 강점이 있습니다.
+    </p>
+    <p>
+        알고리즘은 주로 이산 로그 문제의 어려움에 기반합니다.
+    </p>
+
+    <hr>
+
+    <h2>알고리즘 구성 요소 (파라미터 및 키)</h2>
+    <ol>
+        <li>
+            <strong>공개 파라미터</strong>: 모두에게 공개되는 값들입니다.
+            <ul>
+                <li><b>p</b>: 매우 큰 소수.</li>
+                <li><b>g</b>: <code>Z_p^*</code> 그룹 내에서 위수(order)가 q인 생성원(generator). 즉, <code>g^q ≡ 1 (mod p)</code>를 만족합니다.</li>
+            </ul>
+        </li>
+        <li>
+            <strong>키</strong>:
+            <ul>
+                <li><b>개인키 x</b>: 서명자가 <code>2</code>과 <code>p-2</code> 사이에서 무작위로 선택한 정수.</li>
+                <li><b>공개키 y</b>: <code>y ≡ g^x (mod p)</code>를 계산한 값.</li>
+            </ul>
+        </li>
+    </ol>
+
+    <hr>
+
+    <h2>서명 과정 (Signing)</h2>
+    <p>서명자가 메시지 <code>m</code>에 대해 서명 <code>s</code>를 생성하는 과정은 간단합니다.</p>
+    <pre><code>s ≡ m^x (mod p)</code></pre>
+    <p>결과적으로 <code>(m, s)</code> 쌍이 '서명된 메시지'가 됩니다. 실제 구현에서는 메시지 <code>m</code> 자체보다는 해시값 <code>H(m)</code>을 사용합니다.</p>
+
+    <hr>
+
+    <h2>확인 과정 (Verification)</h2>
+    <p>검증자가 서명 <code>s</code>가 유효한지 확인하는 상호작용 과정입니다. 아래 프로토콜은 서명자가 검증자의 파라미터(<code>a,b</code>)를 미리 알 수 없도록 하여 안정성을 높인 방식입니다.</p>
+    <ol>
+        <li>
+            <strong>검증자 (도전)</strong>:
+            <ul>
+                <li>임의의 정수 <code>a, b</code>를 선택합니다.</li>
+                <li>도전 값 <code>t ≡ m^a * g^b (mod p)</code>를 계산하여 <code>t</code>를 서명자에게 전송합니다.</li>
+            </ul>
+        </li>
+        <li>
+            <strong>서명자 (응답)</strong>:
+            <ul>
+                <li>검증자로부터 <code>t</code>를 수신합니다.</li>
+                <li>임의의 비밀값 <code>k</code>를 선택합니다.</li>
+                <li><code>d1 ≡ t * g^k (mod p)</code></li>
+                <li><code>d2 ≡ (d1)^x (mod p)</code></li>
+                <li>계산된 <code>(d1, d2)</code>를 검증자에게 전송합니다.</li>
+            </ul>
+        </li>
+        <li>
+            <strong>검증자 (파라미터 공개)</strong>:
+            <ul>
+                <li>서명자로부터 <code>(d1, d2)</code>를 수신합니다.</li>
+                <li>자신이 처음에 선택했던 <code>a</code>와 <code>b</code>를 서명자에게 전송합니다.</li>
+            </ul>
+        </li>
+        <li>
+            <strong>서명자 (무결성 확인 및 비밀값 공개)</strong>:
+            <ul>
+                <li><code>a, b</code>를 수신하고, <code>t' ≡ m^a * g^b (mod p)</code> 를 계산하여 자신이 처음에 받은 <code>t</code>와 같은지 확인합니다.</li>
+                <li>일치한다면, 자신이 선택했던 비밀값 <code>k</code>를 검증자에게 전송합니다.</li>
+            </ul>
+        </li>
+        <li>
+            <strong>검증자 (최종 검증)</strong>:
+            <ul>
+                <li>비밀값 <code>k</code>를 수신합니다.</li>
+                <li>자신이 받은 <code>d2</code>가 <code>s^a * y^(b+k) (mod p)</code>와 일치하는지 확인합니다.</li>
+                <li>만약 두 값이 같다면, 서명은 유효한 것으로 최종 확인됩니다.</li>
+            </ul>
+        </li>
+    </ol>
+
+    <hr>
+
+    <h2>부인 과정 (Disavowal Protocol)</h2>
+    <p>서명자가 <strong>위조된 서명 <code>s'</code></strong>이 자신의 것이 아님을 증명하는 과정입니다.</p>
+    <ul>
+        <li><strong>사전 조건</strong>: 위조된 서명 <code>s'</code>과, 전수 조사를 위한 작은 정수 <code>Z</code>는 서명자와 검증자 모두 미리 알고 있습니다.</li>
+    </ul>
+    <ol>
+        <li>
+            <strong>검증자</strong>:
+            <ul>
+                <li><code>a</code>와 <code>k</code> (<code>k</code>는 <code>Z</code>보다 작은 수)를 무작위로 선택합니다.</li>
+                <li><code>t1 ≡ m^k * g^a (mod p)</code></li>
+                <li><code>t2 ≡ (s')^k * y^a (mod p)</code></li>
+                <li>계산된 <code>(t1, t2)</code>를 서명자에게 전송합니다.</li>
+            </ul>
+        </li>
+        <li>
+            <strong>서명자</strong>:
+            <ul>
+                <li><code>(t1, t2)</code>를 수신합니다.</li>
+                <li><code>(t1^x / t2) = (s/s')^k</code> 가 성립하는 정수 <code>k</code>를 <code>2</code>에서 <code>Z-1</code>사이에서 구합니다.</li>
+                <li>
+                    <div class="comment-box">
+                        <strong>[주석]</strong> 이 단계는 서명자가 <code>k</code> 값을 <code>2</code>부터 <code>Z-1`까지 모두 대입해보는 <strong>전수 조사(Brute-force search)</strong>를 통해 `k`를 찾도록 요구합니다. `s' ≠ s` 일 경우에만 `k`가 유일하게 결정되므로 `k`를 찾을 수 있습니다. `Z`가 충분히 작아야만 현실적으로 수행 가능한 매우 특이한 방식입니다.
+                    </div>
+                </li>
+                <li>`k`를 찾았다면, 또 다른 임의의 비밀값 <code>k2`를 선택합니다.</li>
+                <li><code>Q ≡ g^(k*k2) (mod p)`를 구하고 `Q`를 검증자에게 전송합니다.</li>
+            </ul>
+        </li>
+        <li>
+            <strong>검증자</strong>:
+            <ul>
+                <li>`Q`를 수신하고, 자신이 처음에 선택했던 `a`를 서명자에게 전송합니다.</li>
+            </ul>
+        </li>
+        <li>
+            <strong>서명자</strong>:
+            <ul>
+                <li>`a`를 수신하고, `t1' ≡ m^k * g^a (mod p)` 와 `t2' ≡ (s')^k * y^a (mod p)` 를 계산하여 `(t1,t2)`와 `(t1',t2')`가 일치하는지 확인합니다.</li>
+                <li>일치한다면, 비밀값 `k2`를 검증자에게 전송합니다.</li>
+            </ul>
+        </li>
+        <li>
+            <strong>검증자</strong>:
+            <ul>
+                <li>비밀값 `k2`를 수신합니다.</li>
+                <li><code>Q' ≡ (g^k)^(k2) (mod p)` 를 계산하고 `Q`와 `Q'`이 일치하는지 확인합니다.</li>
+                <li><strong>결론</strong>: `Q`와 `Q'`이 일치하면, 서명자가 `k`를 성공적으로 찾았다는 의미이므로 `s'`은 <strong>위조된 서명</strong>입니다. 만약 서명자가 프로토콜을 완료하지 못해 `Q`와 `Q'`이 일치하지 않으면, `s'`은 <strong>위조된 서명이 아닙니다.</strong></li>
+            </ul>
+        </li>
+    </ol>
+</div>
+<style>
+    .text-content {
+        line-height: 1.6;
+    }
+    .text-content h2 {
+        margin-top: 2em;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 5px;
+    }
+    .text-content pre {
+        background-color: #eee;
+        padding: 10px;
+        border-radius: 5px;
+    }
+    .comment-box {
+        background-color: #fff8e1;
+        border-left: 5px solid #ffc107;
+        padding: 10px;
+        margin: 10px 0;
+    }
+</style>
+{% endblock %}

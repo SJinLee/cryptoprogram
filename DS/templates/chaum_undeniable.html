@@ -1,0 +1,352 @@
+{% extends "base.html" %}
+{% block title %}Chaum 부인방지 서명{% endblock %}
+
+{% block content %}
+<h1>Chaum 부인방지 서명 (Undeniable Signature)</h1>
+<p>
+    데이비드 차움(David Chaum)이 제안한 디지털 서명 방식으로, 서명자의 능동적인 참여가 있어야만 서명을 검증할 수 있는 것이 특징입니다. 이를 통해 서명자는 자신의 서명이 언제, 누구에 의해 검증되는지 완벽하게 통제할 수 있어 프라이버시 보호에 강점이 있습니다. 알고리즘은 주로 이산 로그 문제의 어려움에 기반합니다.
+</p>
+
+<div class="form-section">
+    <h2>1. 알고리즘 구성 요소 (파라미터 및 키)</h2>
+    <form method="post" action="{{ url_for('chaum_undeniable') }}">
+        <input type="hidden" name="operation" value="generate_params">
+        <div class="form-group">
+            <label for="p">소수 p:</label>
+            <input type="number" id="p" name="p" value="{{ p or '' }}">
+        </div>
+        <div class="form-group">
+            <label for="g">생성원 g (p의 원시근):</label>
+            <input type="number" id="g" name="g" value="{{ g or '' }}">
+        </div>
+        <div class="form-group">
+            <label for="x">개인키 x (2 &lt; x &lt; p-2):</label>
+            <input type="number" id="x" name="x" value="{{ x or '' }}">
+        </div>
+        <button type="submit">키 생성</button>
+        {% if key_error %}
+        <div class="error">{{ key_error }}</div>
+        {% endif %}
+        <div class="form-group">
+            <label for="y">공개키 y:</label>
+            <input type="number" id="y" name="y" value="{{ y or '' }}" readonly>
+        </div>
+    </form>
+</div>
+
+<div class="form-section">
+    <h2>2. 서명 과정 (Signing)</h2>
+    <form method="post" action="{{ url_for('chaum_undeniable') }}">
+        <input type="hidden" name="operation" value="sign">
+        <!-- Pass through key values -->
+        <input type="hidden" name="p" value="{{ p or '' }}">
+        <input type="hidden" name="g" value="{{ g or '' }}">
+        <input type="hidden" name="x" value="{{ x or '' }}">
+        <input type="hidden" name="y" value="{{ y or '' }}">
+
+        <div class="form-group">
+            <label for="m_sign">메시지 m:</label>
+            <input type="text" id="m_sign" name="m_sign" value="{{ m_sign or '' }}">
+        </div>
+        <button type="submit">서명 생성</button>
+        {% if sign_error %}
+        <div class="error">{{ sign_error }}</div>
+        {% endif %}
+        <div class="form-group">
+            <label for="s_sign">서명 s (s = H(m)^x mod p):</label>
+            <input type="number" id="s_sign" name="s_sign" value="{{ s_sign or '' }}" readonly>
+        </div>
+    </form>
+</div>
+
+<div class="form-section">
+    <h2>3. 확인 과정 (Verification)</h2>
+    <p>검증자와 서명자 간의 상호작용을 통해 서명의 유효성을 확인하는 과정입니다.</p>
+    
+    <form method="post" action="{{ url_for('chaum_undeniable') }}">
+        <input type="hidden" name="operation" value="verify_step1">
+        <!-- Pass through all values -->
+        <input type="hidden" name="p" value="{{ p or '' }}">
+        <input type="hidden" name="g" value="{{ g or '' }}">
+        <input type="hidden" name="x" value="{{ x or '' }}">
+        <input type="hidden" name="y" value="{{ y or '' }}">
+        <input type="hidden" name="m_sign" value="{{ m_sign or '' }}">
+        <input type="hidden" name="s_sign" value="{{ s_sign or '' }}">
+
+        <div class="interaction-step">
+            <h4>1. 검증자 (도전)</h4>
+            <div class="form-group">
+                <label for="a_verify">임의의 정수 a:</label>
+                <input type="number" id="a_verify" name="a_verify" value="{{ a_verify or '' }}">
+            </div>
+            <div class="form-group">
+                <label for="b_verify">임의의 정수 b:</label>
+                <input type="number" id="b_verify" name="b_verify" value="{{ b_verify or '' }}">
+            </div>
+            <button type="submit">1. 도전 값(t) 계산</button>
+            <div class="form-group">
+                <label for="t_verify">도전 값 t:</label>
+                <input type="number" id="t_verify" name="t_verify" value="{{ t_verify or '' }}" readonly>
+            </div>
+        </div>
+    </form>
+
+    <form method="post" action="{{ url_for('chaum_undeniable') }}">
+        <input type="hidden" name="operation" value="verify_step2">
+        <!-- Pass through all values -->
+        <input type="hidden" name="p" value="{{ p or '' }}">
+        <input type="hidden" name="g" value="{{ g or '' }}">
+        <input type="hidden" name="x" value="{{ x or '' }}">
+        <input type="hidden" name="y" value="{{ y or '' }}">
+        <input type="hidden" name="m_sign" value="{{ m_sign or '' }}">
+        <input type="hidden" name="s_sign" value="{{ s_sign or '' }}">
+        <input type="hidden" name="a_verify" value="{{ a_verify or '' }}">
+        <input type="hidden" name="b_verify" value="{{ b_verify or '' }}">
+        <input type="hidden" name="t_verify" value="{{ t_verify or '' }}">
+
+        <div class="interaction-step">
+            <h4>2. 서명자 (응답)</h4>
+            <div class="form-group">
+                <label for="k_verify_signer">임의의 비밀값 k:</label>
+                <input type="number" id="k_verify_signer" name="k_verify_signer" value="{{ k_verify_signer or '' }}">
+            </div>
+            <button type="submit">2. 응답 (d1, d2) 계산</button>
+            <div class="form-group">
+                <label for="d1_verify">응답 d1:</label>
+                <input type="number" id="d1_verify" name="d1_verify" value="{{ d1_verify or '' }}" readonly>
+            </div>
+            <div class="form-group">
+                <label for="d2_verify">응답 d2:</label>
+                <input type="number" id="d2_verify" name="d2_verify" value="{{ d2_verify or '' }}" readonly>
+            </div>
+        </div>
+    </form>
+
+    <div class="interaction-step">
+        <h4>3. 검증자 (파라미터 공개)</h4>
+        <p>이제 검증자는 서명자에게 자신이 사용했던 a, b 값을 공개합니다. (이 과정은 UI 흐름상 표현됩니다)</p>
+    </div>
+
+    <form method="post" action="{{ url_for('chaum_undeniable') }}">
+        <input type="hidden" name="operation" value="verify_step4">
+        <!-- Pass through all values -->
+        <input type="hidden" name="p" value="{{ p or '' }}">
+        <input type="hidden" name="g" value="{{ g or '' }}">
+        <input type="hidden" name="x" value="{{ x or '' }}">
+        <input type="hidden" name="y" value="{{ y or '' }}">
+        <input type="hidden" name="m_sign" value="{{ m_sign or '' }}">
+        <input type="hidden" name="s_sign" value="{{ s_sign or '' }}">
+        <input type="hidden" name="a_verify" value="{{ a_verify or '' }}">
+        <input type="hidden" name="b_verify" value="{{ b_verify or '' }}">
+        <input type="hidden" name="t_verify" value="{{ t_verify or '' }}">
+        <input type="hidden" name="d1_verify" value="{{ d1_verify or '' }}">
+        <input type="hidden" name="d2_verify" value="{{ d2_verify or '' }}">
+        <input type="hidden" name="k_verify_signer" value="{{ k_verify_signer or '' }}">
+
+        <div class="interaction-step">
+            <h4>4. 서명자 (무결성 확인 및 비밀값 공개)</h4>
+            <button type="submit">4. 무결성 확인 및 k 공개</button>
+            <div class="result">
+                <p>무결성 검증 결과: {{ integrity_check_result or '' }}</p>
+            </div>
+            <div class="form-group">
+                <label for="k_revealed">공개된 k 값:</label>
+                <input type="number" id="k_revealed" name="k_revealed" value="{{ k_revealed or '' }}" readonly>
+            </div>
+        </div>
+    </form>
+    
+    <form method="post" action="{{ url_for('chaum_undeniable') }}">
+        <input type="hidden" name="operation" value="verify_step5">
+        <!-- Pass through all values -->
+        <input type="hidden" name="p" value="{{ p or '' }}">
+        <input type="hidden" name="g" value="{{ g or '' }}">
+        <input type="hidden" name="x" value="{{ x or '' }}">
+        <input type="hidden" name="y" value="{{ y or '' }}">
+        <input type="hidden" name="m_sign" value="{{ m_sign or '' }}">
+        <input type="hidden" name="s_sign" value="{{ s_sign or '' }}">
+        <input type="hidden" name="a_verify" value="{{ a_verify or '' }}">
+        <input type="hidden" name="b_verify" value="{{ b_verify or '' }}">
+        <input type="hidden" name="t_verify" value="{{ t_verify or '' }}">
+        <input type="hidden" name="d1_verify" value="{{ d1_verify or '' }}">
+        <input type="hidden" name="d2_verify" value="{{ d2_verify or '' }}">
+        <input type="hidden" name="k_verify_signer" value="{{ k_verify_signer or '' }}">
+        <input type="hidden" name="k_revealed" value="{{ k_revealed or '' }}">
+
+        <div class="interaction-step">
+            <h4>5. 검증자 (최종 검증)</h4>
+            <p>서명자로부터 공개된 k값을 받아 최종 검증을 수행합니다.</p>
+            <div class="form-group">
+                <label for="k_verify_final">공개된 k 값으로 검증:</label>
+                <input type="number" id="k_verify_final" name="k_verify_final" value="{{ k_revealed or k_verify_final or '' }}">
+            </div>
+            <button type="submit">5. 최종 검증</button>
+            {% if verification_error %}
+            <div class="error">{{ verification_error }}</div>
+            {% endif %}
+            <div class="result">
+                <p>검증 결과: {{ verification_result or '' }}</p>
+            </div>
+        </div>
+    </form>
+
+
+    <h2>4. 부인 과정 (Disavowal Protocol)</h2>
+    <p>서명자가 위조된 서명 s'이 자신의 것이 아님을 증명하는 과정입니다. 이 프로토콜은 서명자가 전수 조사를 통해 k를 찾아야 하는 특이한 방식입니다.</p>
+    
+    <form method="post" action="{{ url_for('chaum_undeniable') }}">
+        <input type="hidden" name="operation" value="disavow_step1">
+        <!-- Pass through all values -->
+        <input type="hidden" name="p" value="{{ p or '' }}">
+        <input type="hidden" name="g" value="{{ g or '' }}">
+        <input type="hidden" name="x" value="{{ x or '' }}">
+        <input type="hidden" name="y" value="{{ y or '' }}">
+        <input type="hidden" name="m_sign" value="{{ m_sign or '' }}">
+        <input type="hidden" name="s_sign" value="{{ s_sign or '' }}">
+
+        <div class="interaction-step">
+            <h4>1. 검증자 (t1, t2 생성)</h4>
+            <div class="form-group">
+                <label for="s_prime_disavow">위조된 서명 s':</label>
+                <input type="number" id="s_prime_disavow" name="s_prime_disavow" value="{{ s_prime_disavow or '' }}">
+            </div>
+            <div class="form-group">
+                <label for="Z_disavow">전수조사 범위 Z:</label>
+                <input type="number" id="Z_disavow" name="Z_disavow" value="{{ Z_disavow or '' }}">
+            </div>
+            <button type="submit">1. t1, t2 계산</button>
+            <div class="form-group">
+                <label for="k_disavow_verifier">생성된 k 값 (검증자):</label>
+                <input type="number" id="k_disavow_verifier" name="k_disavow_verifier" value="{{ k_disavow_verifier or '' }}" readonly>
+            </div>
+            <div class="form-group">
+                <label for="t1_disavow">t1:</label>
+                <input type="number" id="t1_disavow" name="t1_disavow" value="{{ t1_disavow or '' }}" readonly>
+            </div>
+            <div class="form-group">
+                <label for="t2_disavow">t2:</label>
+                <input type="number" id="t2_disavow" name="t2_disavow" value="{{ t2_disavow or '' }}" readonly>
+            </div>
+        </div>
+    </form>
+
+    <hr>
+
+    <form method="post" action="{{ url_for('chaum_undeniable') }}">
+        <input type="hidden" name="operation" value="disavow_step2">
+        <!-- Pass through all values -->
+        <input type="hidden" name="p" value="{{ p or '' }}">
+        <input type="hidden" name="g" value="{{ g or '' }}">
+        <input type="hidden" name="x" value="{{ x or '' }}">
+        <input type="hidden" name="y" value="{{ y or '' }}">
+        <input type="hidden" name="m_sign" value="{{ m_sign or '' }}">
+        <input type="hidden" name="s_sign" value="{{ s_sign or '' }}">
+        <input type="hidden" name="s_prime_disavow" value="{{ s_prime_disavow or '' }}">
+        <input type="hidden" name="Z_disavow" value="{{ Z_disavow or '' }}">
+        <input type="hidden" name="t1_disavow" value="{{ t1_disavow or '' }}">
+        <input type="hidden" name="t2_disavow" value="{{ t2_disavow or '' }}">
+        <input type="hidden" name="k_disavow_verifier" value="{{ k_disavow_verifier or '' }}">
+
+        <div class="interaction-step">
+            <h4>2. 서명자 (k 찾기 및 Q 계산)</h4>
+            <button type="submit">2. k 찾기 및 Q 계산</button>
+            <div class="form-group">
+                <label for="k_disavow_found">찾은 k 값:</label>
+                <input type="number" id="k_disavow_found" name="k_disavow_found" value="{{ k_disavow_found or '' }}" readonly>
+            </div>
+            <div class="form-group">
+                <label for="Q_disavow">Q:</label>
+                <input type="number" id="Q_disavow" name="Q_disavow" value="{{ Q_disavow or '' }}" readonly>
+            </div>
+            <div class="form-group">
+                <label for="k2_disavow_signer">생성된 k2 값 (서명자):</label>
+                <input type="number" id="k2_disavow_signer" name="k2_disavow_signer" value="{{ k2_disavow_signer or '' }}" readonly>
+            </div>
+        </div>
+    </form>
+
+    <hr>
+
+    <div class="interaction-step">
+        <h4>3. 검증자 (Q 수신 및 a 공개)</h4>
+        <p>검증자는 서명자로부터 Q를 수신하고, 자신의 비밀값 a를 서명자에게 공개합니다.</p>
+    </div>
+
+    <hr>
+
+    <form method="post" action="{{ url_for('chaum_undeniable') }}">
+        <input type="hidden" name="operation" value="disavow_step4">
+        <!-- Pass through all values -->
+        <input type="hidden" name="p" value="{{ p or '' }}">
+        <input type="hidden" name="g" value="{{ g or '' }}">
+        <input type="hidden" name="x" value="{{ x or '' }}">
+        <input type="hidden" name="y" value="{{ y or '' }}">
+        <input type="hidden" name="m_sign" value="{{ m_sign or '' }}">
+        <input type="hidden" name="s_sign" value="{{ s_sign or '' }}">
+        <input type="hidden" name="s_prime_disavow" value="{{ s_prime_disavow or '' }}">
+        <input type="hidden" name="Z_disavow" value="{{ Z_disavow or '' }}">
+        <input type="hidden" name="k_disavow_verifier" value="{{ k_disavow_verifier or '' }}">
+        <input type="hidden" name="t1_disavow" value="{{ t1_disavow or '' }}">
+        <input type="hidden" name="t2_disavow" value="{{ t2_disavow or '' }}">
+        <input type="hidden" name="k_disavow_found" value="{{ k_disavow_found or '' }}">
+        <input type="hidden" name="Q_disavow" value="{{ Q_disavow or '' }}">
+        <input type="hidden" name="k2_disavow_signer" value="{{ k2_disavow_signer or '' }}">
+
+        <div class="interaction-step">
+            <h4>4. 서명자 (무결성 확인 및 k2 공개)</h4>
+            <button type="submit">4. 무결성 확인 및 k2 공개</button>
+            <div class="result">
+                <p>무결성 검증 결과: {{ integrity_check_result_disavow or '' }}</p>
+            </div>
+            <div class="form-group">
+                <label for="k2_revealed">공개된 k2 값:</label>
+                <input type="number" id="k2_revealed" name="k2_revealed" value="{{ k2_revealed or '' }}" readonly>
+            </div>
+        </div>
+    </form>
+
+    <hr>
+
+    <form method="post" action="{{ url_for('chaum_undeniable') }}">
+        <input type="hidden" name="operation" value="disavow_step5">
+        <!-- Pass through all values -->
+        <input type="hidden" name="p" value="{{ p or '' }}">
+        <input type="hidden" name="g" value="{{ g or '' }}">
+        <input type="hidden" name="x" value="{{ x or '' }}">
+        <input type="hidden" name="y" value="{{ y or '' }}">
+        <input type="hidden" name="m_sign" value="{{ m_sign or '' }}">
+        <input type="hidden" name="s_sign" value="{{ s_sign or '' }}">
+        <input type="hidden" name="s_prime_disavow" value="{{ s_prime_disavow or '' }}">
+        <input type="hidden" name="Z_disavow" value="{{ Z_disavow or '' }}">
+        <input type="hidden" name="k_disavow_verifier" value="{{ k_disavow_verifier or '' }}">
+        <input type="hidden" name="t1_disavow" value="{{ t1_disavow or '' }}">
+        <input type="hidden" name="t2_disavow" value="{{ t2_disavow or '' }}">
+        <input type="hidden" name="k_disavow_found" value="{{ k_disavow_found or '' }}">
+        <input type="hidden" name="Q_disavow" value="{{ Q_disavow or '' }}">
+        <input type="hidden" name="k2_disavow_signer" value="{{ k2_disavow_signer or '' }}">
+        <input type="hidden" name="k2_revealed" value="{{ k2_revealed or '' }}">
+        <input type="hidden" name="integrity_check_result_disavow" value="{{ integrity_check_result_disavow or '' }}">
+
+        <div class="interaction-step">
+            <h4>5. 검증자 (최종 검증)</h4>
+            <p>서명자로부터 공개된 k2값을 받아 최종 검증을 수행합니다.</p>
+            <div class="form-group">
+                <label for="k2_disavow_final">공개된 k2 값으로 검증:</label>
+                <input type="number" id="k2_disavow_final" name="k2_disavow_final" value="{{ k2_revealed or k2_disavow_final or '' }}">
+            </div>
+            <button type="submit">5. 최종 검증</button>
+            <div class="form-group">
+                <label for="Q_prime_disavow">계산된 Q' 값:</label>
+                <input type="number" id="Q_prime_disavow" name="Q_prime_disavow" value="{{ Q_prime_disavow or '' }}" readonly>
+            </div>
+            {% if disavowal_error %}
+            <div class="error">{{ disavowal_error }}</div>
+            {% endif %}
+            <div class="result">
+                <p>부인 검증 결과: {{ disavowal_result or '' }}</p>
+            </div>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

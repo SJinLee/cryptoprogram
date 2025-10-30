@@ -725,5 +725,141 @@ def standards():
 def other_content():
     return render_template('other_content.html')
 
+@app.route('/chaum_undeniable', methods=['GET', 'POST'])
+def chaum_undeniable():
+    template_vars = {
+        'p': None, 'g': None, 'x': None, 'y': None, 'key_error': None,
+        'm_sign': None, 's_sign': None, 'sign_error': None,
+        'a_verify': None, 'b_verify': None, 't_verify': None, 'd1_verify': None, 'd2_verify': None, 
+        'k_verify_signer': None, 'k_verify_final': None, 'verification_result': None, 'verification_error': None, 
+        'integrity_check_result': None, 'k_revealed': None,
+        's_prime_disavow': None, 'Z_disavow': None, 't1_disavow': None, 't2_disavow': None, 
+        'k_disavow_found': None, 'Q_disavow': None, 'disavowal_result': None, 'disavowal_error': None, 
+        'k2_disavow_final': None, 'k_disavow_verifier': None, 'k2_disavow_signer': None,
+        'integrity_check_result_disavow': None, 'k2_revealed': None, 'Q_prime_disavow': None
+    }
+
+    if request.method == 'POST':
+        operation = request.form.get('operation')
+        for key in request.form:
+            if key in template_vars:
+                template_vars[key] = request.form[key]
+
+        try:
+            if operation == 'generate_params':
+                p_val, g_val, x_val = int(template_vars['p']), int(template_vars['g']), int(template_vars['x'])
+                if not is_prime(p_val): template_vars['key_error'] = "p는 소수여야 합니다."
+                elif not (1 < g_val < p_val): template_vars['key_error'] = "g는 1과 p 사이의 값이어야 합니다."
+                elif not (2 <= x_val <= p_val - 2): template_vars['key_error'] = "x는 2와 p-2 사이의 값이어야 합니다."
+                else: template_vars['y'] = pow(g_val, x_val, p_val)
+
+            elif operation == 'sign':
+                p_val, x_val = int(template_vars['p']), int(template_vars['x'])
+                h = int(hashlib.sha256(template_vars['m_sign'].encode()).hexdigest(), 16)
+                template_vars['s_sign'] = pow(h, x_val, p_val)
+
+            elif operation == 'verify_step1':
+                p_val, g_val = int(template_vars['p']), int(template_vars['g'])
+                a_val, b_val = int(template_vars['a_verify']), int(template_vars['b_verify'])
+                h = int(hashlib.sha256(template_vars['m_sign'].encode()).hexdigest(), 16)
+                template_vars['t_verify'] = (pow(h, a_val, p_val) * pow(g_val, b_val, p_val)) % p_val
+                session['verify_h'] = h
+
+            elif operation == 'verify_step2':
+                p_val, g_val, x_val = int(template_vars['p']), int(template_vars['g']), int(template_vars['x'])
+                t_val, k_val = int(template_vars['t_verify']), int(template_vars['k_verify_signer'])
+                d1 = (t_val * pow(g_val, k_val, p_val)) % p_val
+                template_vars['d1_verify'] = d1
+                template_vars['d2_verify'] = pow(d1, x_val, p_val)
+
+            elif operation == 'verify_step4':
+                p_val, g_val = int(template_vars['p']), int(template_vars['g'])
+                a_val, b_val, t_val = int(template_vars['a_verify']), int(template_vars['b_verify']), int(template_vars['t_verify'])
+                h = int(hashlib.sha256(template_vars['m_sign'].encode()).hexdigest(), 16)
+                t_prime = (pow(h, a_val, p_val) * pow(g_val, b_val, p_val)) % p_val
+                if t_val == t_prime:
+                    template_vars['integrity_check_result'] = "성공 (t' == t). 비밀값 k를 공개합니다."
+                    template_vars['k_revealed'] = template_vars['k_verify_signer']
+                else:
+                    template_vars['integrity_check_result'] = "실패 (t' != t). 검증자가 정직하지 않습니다."
+
+            elif operation == 'verify_step5':
+                p_val, g_val, y_val, s_val = int(template_vars['p']), int(template_vars['g']), int(template_vars['y']), int(template_vars['s_sign'])
+                d2_val, a_val, b_val, k_val = int(template_vars['d2_verify']), int(template_vars['a_verify']), int(template_vars['b_verify']), int(template_vars['k_verify_final'])
+                h = session.get('verify_h', 0)
+                d2_check = (pow(s_val, a_val, p_val) * pow(y_val, b_val + k_val, p_val)) % p_val
+                if d2_val == d2_check:
+                    template_vars['verification_result'] = "서명 유효함"
+                else:
+                    template_vars['verification_result'] = "서명 유효하지 않음"
+                for key in list(session.keys()):
+                    if key.startswith('verify_'): session.pop(key)
+
+            elif operation == 'disavow_step1':
+                p_val, g_val, y_val = int(template_vars['p']), int(template_vars['g']), int(template_vars['y'])
+                s_prime_val, Z_val = int(template_vars['s_prime_disavow']), int(template_vars['Z_disavow'])
+                a, k = random.randint(2, p_val - 2), random.randint(2, Z_val - 1)
+                session['disavow_a'], session['disavow_k'] = a, k
+                template_vars['k_disavow_verifier'] = k
+                h_m = int(hashlib.sha256(template_vars['m_sign'].encode()).hexdigest(), 16)
+                template_vars['t1_disavow'] = (pow(h_m, k, p_val) * pow(g_val, a, p_val)) % p_val
+                template_vars['t2_disavow'] = (pow(s_prime_val, k, p_val) * pow(y_val, a, p_val)) % p_val
+
+            elif operation == 'disavow_step2':
+                p_val, g_val, x_val = int(template_vars['p']), int(template_vars['g']), int(template_vars['x'])
+                s_val, s_prime_val = int(template_vars['s_sign']), int(template_vars['s_prime_disavow'])
+                t1_val, t2_val, Z_val = int(template_vars['t1_disavow']), int(template_vars['t2_disavow']), int(template_vars['Z_disavow'])
+                found_k = -1
+                s_inv, t2_inv = mod_inverse(s_prime_val, p_val), mod_inverse(t2_val, p_val)
+                base, target = (s_val * s_inv) % p_val, (pow(t1_val, x_val, p_val) * t2_inv) % p_val
+                for k_test in range(2, Z_val):
+                    if pow(base, k_test, p_val) == target:
+                        found_k = k_test
+                        break
+                if found_k != -1:
+                    template_vars['k_disavow_found'] = found_k
+                    k2 = random.randint(2, p_val - 2)
+                    session['disavow_k2'] = k2
+                    template_vars['k2_disavow_signer'] = k2
+                    template_vars['Q_disavow'] = pow(g_val, found_k * k2, p_val)
+                else:
+                    template_vars['disavowal_error'] = "k를 찾을 수 없습니다. s'이 위조된 서명이 아닐 수 있습니다."
+
+            elif operation == 'disavow_step4':
+                p_val, g_val, y_val = int(template_vars['p']), int(template_vars['g']), int(template_vars['y'])
+                s_prime_val = int(template_vars['s_prime_disavow'])
+                t1_val, t2_val = int(template_vars['t1_disavow']), int(template_vars['t2_disavow'])
+                a_from_session, k_from_session = session.get('disavow_a'), session.get('disavow_k')
+                h_m = int(hashlib.sha256(template_vars['m_sign'].encode()).hexdigest(), 16)
+                t1_prime = (pow(h_m, k_from_session, p_val) * pow(g_val, a_from_session, p_val)) % p_val
+                t2_prime = (pow(s_prime_val, k_from_session, p_val) * pow(y_val, a_from_session, p_val)) % p_val
+                if t1_val == t1_prime and t2_val == t2_prime:
+                    template_vars['integrity_check_result_disavow'] = "성공. 비밀값 k2를 공개합니다."
+                    template_vars['k2_revealed'] = template_vars['k2_disavow_signer']
+                else:
+                    template_vars['integrity_check_result_disavow'] = "실패. 검증자가 정직하지 않습니다."
+
+            elif operation == 'disavow_step5':
+                p_val, g_val, Q_val = int(template_vars['p']), int(template_vars['g']), int(template_vars['Q_disavow'])
+                k2_val = int(template_vars['k2_disavow_final'])
+                k_from_session = session.get('disavow_k')
+                Q_prime = pow(g_val, k_from_session * k2_val, p_val)
+                template_vars['Q_prime_disavow'] = Q_prime
+                if Q_val == Q_prime:
+                    template_vars['disavowal_result'] = "성공: s'은 위조된 서명입니다."
+                else:
+                    template_vars['disavowal_result'] = "실패: Q와 Q'이 일치하지 않으므로, s'은 위조된 서명이 아닙니다."
+                for key in list(session.keys()):
+                    if key.startswith('disavow_'): session.pop(key)
+
+        except (ValueError, TypeError, KeyError) as e:
+            template_vars['key_error'] = f"오류 발생: {e}. 모든 필드에 유효한 값이 있는지 확인하세요."
+
+    return render_template('chaum_undeniable.html', **template_vars)
+
 if __name__ == '__main__':
     app.run(debug=True)
+
+@app.route('/chaum_undeniable_explanation')
+def chaum_undeniable_explanation():
+    return render_template('chaum_undeniable_explanation.html')

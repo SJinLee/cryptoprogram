@@ -18,6 +18,8 @@
                     <li><a href="{{ url_for('dss_signature') }}">DSS (DSA) 전자서명</a></li>
                     <li><a href="{{ url_for('nyberg_rueppel') }}">Nyberg-Rueppel 전자서명</a></li>
                     <li><a href="{{ url_for('kcdsa') }}">KCDSA 표준</a></li>
+                    <li><a href="{{ url_for('chaum_undeniable') }}">Chaum 부인방지 서명 (실험)</a></li>
+                    <li><a href="{{ url_for('chaum_undeniable_explanation') }}">Chaum 부인방지 서명 (설명)</a></li>
                     <li><a href="{{ url_for('modulo_calculator') }}">모듈로 계산기</a></li>
                     <li><a href="{{ url_for('prime_generator') }}">소수/원시근 생성기</a></li>
                     <li><a href="{{ url_for('standards') }}">전자서명 표준</a></li>
@@ -30,5 +32,18 @@
             {% block content %}{% endblock %}
         </main>
     </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function(event) { 
+            var scrollpos = sessionStorage.getItem('scrollpos');
+            if (scrollpos) {
+                window.scrollTo(0, scrollpos);
+                sessionStorage.removeItem('scrollpos');
+            }
+        });
+
+        window.addEventListener("beforeunload", function(e) {
+            sessionStorage.setItem('scrollpos', window.scrollY);
+        });
+    </script>
 </body>
 </html>
